@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.path.json",
   "compilerOptions": {
+    "types": ["@types/jest"],
     "target": "ESNext",
     "module": "CommonJS",
     "esModuleInterop": true,
