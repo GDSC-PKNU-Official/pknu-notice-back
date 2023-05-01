@@ -10,4 +10,4 @@ app.listen('8080', () => {
   console.log('서버 실행중');
 });
 
-console.log('lint-staged');
+console.log('staged');
