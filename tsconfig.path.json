@@ -1,16 +1,15 @@
 {
+  "extends": "./tsconfig.path.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@apis/*": ["./src/apis/*"]
-    }
-  },
-  "ts-node": {
-    "files": true,
-    "transpileOnly": true,
-    "require": [
-      "typescript-transform-paths/register",
-      "tsconfig-paths/register"
-    ]
+    "target": "ESNext",
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "typeRoots": ["../node_modules/@types", "./@types"],
+    "isolatedModules": true,
+    "disableSourceOfProjectReferenceRedirect": true
   }
 }
