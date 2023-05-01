@@ -19,7 +19,9 @@
       "eslint --config ./.eslintrc --fix"
     ]
   },
-  "dependencies": {},
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12"
+  },
   "devDependencies": {
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.1",
