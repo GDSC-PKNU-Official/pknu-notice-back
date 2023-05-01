@@ -9,3 +9,5 @@ app.get("/test", (req: Request, res: Response) => {
 app.listen("8080", () => {
   console.log("서버 실행중");
 });
+
+console.log("qwe");
