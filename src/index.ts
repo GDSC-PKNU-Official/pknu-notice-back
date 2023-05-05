@@ -1,10 +1,9 @@
+import { sum } from '@apis/index';
 import express, { Request, Response } from 'express';
 
 const app = express();
 
-export const sum = (a: number, b: number): number => {
-  return a + b;
-};
+console.log(sum(1, 3));
 
 app.get('/test', (req: Request, res: Response) => {
   res.send('Hello');
