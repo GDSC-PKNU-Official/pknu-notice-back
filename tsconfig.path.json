@@ -4,7 +4,8 @@
     "paths": {
       "@apis/*": ["src/apis/*"],
       "@config/*": ["src/config/*"],
-      "@middlewares/*": ["src/middlewares/*"]
+      "@middlewares/*": ["src/middlewares/*"],
+      "@crawling/*": ["src/crawling/*"]
     }
   },
   "ts-node": {
