@@ -1,14 +1,21 @@
-import { sum } from '@apis/index';
+import { env } from 'process';
+
+import { corsOptions } from '@middlewares/cors';
+import errorHandler from '@middlewares/error-handler';
+import cors from 'cors';
 import express, { Request, Response } from 'express';
+import morgan from 'morgan';
 
 const app = express();
-
-console.log(sum(1, 3));
+app.use(morgan('dev'));
+app.use(cors(corsOptions));
 
 app.get('/test', (req: Request, res: Response) => {
   res.send('Hello');
 });
 
-app.listen('8080', () => {
+app.use(errorHandler);
+
+app.listen(env.PORT, () => {
   console.log('서버 실행중');
 });
