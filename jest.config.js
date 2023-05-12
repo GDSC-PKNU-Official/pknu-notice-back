@@ -6,6 +6,7 @@ module.exports = {
     '@apis/(.*)': '<rootDir>/src/apis/$1',
     '@config/(.*)': '<rootDir>/src/config/$1',
     '@middlewares/(.*)': '<rootDir>/src/middleswares/$1',
+    '@crawling/(.*)': '<rootDir>/src/crawling/$1',
   },
   modulePathIgnorePatterns: ['<rootDir>/dist/'],
 };
