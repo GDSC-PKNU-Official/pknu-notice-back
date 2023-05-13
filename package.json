@@ -19,6 +19,7 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
+    "@notionhq/client": "2.2.5",
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5"
   },
