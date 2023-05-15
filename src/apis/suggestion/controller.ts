@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
-import { postSuggestion } from 'src/utils/notion';
+
+import { postSuggestion } from './service';
 
 const router = express.Router();
 
