@@ -1,7 +1,10 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-export const graduationRequirements = async (departmentLink: string) => {
+export const graduationRequirementsCrawling = async (
+  departmentLink: string,
+) => {
+  if (departmentLink === undefined) return;
   if (departmentLink.endsWith('/'))
     departmentLink = departmentLink.slice(0, -1);
   const graduationLink: string[] = [];
