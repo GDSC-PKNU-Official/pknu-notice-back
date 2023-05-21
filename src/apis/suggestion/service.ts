@@ -1,11 +1,9 @@
+import env from '@config/index';
 import { Client } from '@notionhq/client';
 import { QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const notion = new Client({
-  auth: process.env.NOTION_API_KEY,
+  auth: env.NOTION_API_KEY,
 });
 
 const getToday = () => {
@@ -22,7 +20,7 @@ const getToday = () => {
 
 const getPostLength = async () => {
   const { results }: QueryDatabaseResponse = await notion.databases.query({
-    database_id: process.env.NOTION_DATABASE_ID,
+    database_id: env.NOTION_DATABASE_ID,
   });
 
   return results.length;
