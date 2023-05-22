@@ -1,5 +1,6 @@
 import { env } from 'process';
 
+import suggestionRouter from '@apis/suggestion/controller';
 import { corsOptions } from '@middlewares/cors';
 import errorHandler from '@middlewares/error-handler';
 import cors from 'cors';
@@ -10,12 +11,15 @@ const app = express();
 app.use(morgan('dev'));
 app.use(cors(corsOptions));
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+app.use(express.json());
+app.use(errorHandler);
+
+app.use('/api/suggestion', suggestionRouter);
 
 app.get('/test', (req: Request, res: Response) => {
+  console.log('test');
   res.send('Hello');
 });
-
-app.use(errorHandler);
 
 app.listen(env.PORT, () => {
   console.log('서버 실행중');
