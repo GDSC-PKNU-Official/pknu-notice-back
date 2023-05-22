@@ -31,7 +31,7 @@ export const postSuggestion = async (content: string) => {
   const today = getToday();
 
   const res = await notion.pages.create({
-    parent: { database_id: process.env.NOTION_DATABASE_ID },
+    parent: { database_id: env.NOTION_DATABASE_ID },
     properties: {
       Name: {
         title: [
