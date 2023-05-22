@@ -1,6 +1,5 @@
 import { env } from 'process';
 
-import { collegeCrawling } from '@crawling/collegeCrawling';
 import { corsOptions } from '@middlewares/cors';
 import errorHandler from '@middlewares/error-handler';
 import cors from 'cors';
@@ -21,13 +20,3 @@ app.use(errorHandler);
 app.listen(env.PORT, () => {
   console.log('서버 실행중');
 });
-
-// const start = async () => {
-//   const val = await collegeCrawling();
-//   console.log(val);
-// };
-
-// start();
-
-// // const val3 = graduationRequirementsCrawling('http://safe.pknu.ac.kr');
-// // console.log(val3);
