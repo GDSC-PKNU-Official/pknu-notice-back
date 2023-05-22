@@ -3,21 +3,40 @@ import * as cheerio from 'cheerio';
 
 interface College {
   collegeName: string;
-  collegeLink: string;
+  departmentName: string;
+  departmentSubName: string;
+  departmentLink: string;
 }
 
 export const collegeCrawling = async (): Promise<College[]> => {
   const collegeList: College[] = [];
-  const PKNUURL = 'https://www.pknu.ac.kr';
-  const response = await axios.get(PKNUURL + '/main/23');
+  const pknuURL = 'https://www.pknu.ac.kr';
+  const response = await axios.get(pknuURL + '/main/23');
   const $ = cheerio.load(response.data);
-  $('.subMenu')
-    .find('li')
-    .each((i, li) => {
-      const collegeName = $(li).text().trim();
-      const collegeLink = PKNUURL + $(li).find('a').attr('href');
-      collegeList.push({ collegeName, collegeLink });
-    });
-  console.log(collegeList);
+
+  const collegeTable = $('#user-table');
+  collegeTable.each((_, element) => {
+    $(element)
+      .find('tr')
+      .each((_, row) => {
+        const arr: string[] = [];
+        $(row)
+          .find('td')
+          .each((idx, res) => {
+            if (idx !== 3) {
+              arr.push($(res).text().trim());
+            } else arr.push($(res).find('a').attr('href'));
+          });
+        if (arr[0] !== '학부대학' && arr[0] !== undefined) {
+          const tmpList = {
+            collegeName: arr[0],
+            departmentName: arr[1],
+            departmentSubName: arr[2],
+            departmentLink: arr[3],
+          };
+          collegeList.push(tmpList);
+        }
+      });
+  });
   return collegeList;
 };

@@ -10,6 +10,7 @@ import morgan from 'morgan';
 const app = express();
 app.use(morgan('dev'));
 app.use(cors(corsOptions));
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 app.use(express.json());
 app.use(errorHandler);
 
