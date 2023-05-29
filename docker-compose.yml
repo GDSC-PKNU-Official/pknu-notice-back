@@ -1,11 +1,39 @@
 version: '3'
 services:
   backend:
+    container_name: burimi-back
     build:
       context: .
       dockerfile: dockerfile.dev
+    env_file:
+      - .env
     ports:
-      - '8080:8080'
+      - ${SERVER_PORT}:${SERVER_PORT}
+    depends_on:
+      - database
     volumes:
       - /usr/src/app/node_modules
       - ./:/usr/src/app
+    networks:
+      - mysql_db
+
+  database:
+    image: mysql:8.0
+    container_name: burimi-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+      - MYSQL_USER=${DATABASE_USER}
+      - MYSQL_PASSWORD=${DATABASE_USER_PASSWORD}
+      - MYSQL_DATABASE=${DATABASE_NAME}
+    ports:
+      - ${DATABASE_PORT}:${DATABASE_PORT}
+    networks:
+      - mysql_db
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./sqls:/docker-entrypoint-initdb.d
+
+networks:
+  mysql_db:
