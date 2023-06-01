@@ -1,12 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-
-interface College {
-  collegeName: string;
-  departmentName: string;
-  departmentSubName: string;
-  departmentLink: string;
-}
+import { College } from 'src/@types/college';
 
 export const collegeCrawling = async (): Promise<College[]> => {
   const collegeList: College[] = [];
@@ -27,7 +21,14 @@ export const collegeCrawling = async (): Promise<College[]> => {
               arr.push($(res).text().trim());
             } else arr.push($(res).find('a').attr('href'));
           });
-        if (arr[0] !== '학부대학' && arr[0] !== undefined) {
+        if (
+          arr[0] !== '학부대학' &&
+          arr[0] !== undefined &&
+          arr[0] !== '미래융합대학' &&
+          arr[2] !== '통계·데이터사이언스전공' &&
+          arr[3] !== undefined
+        ) {
+          if (arr[3].endsWith('/')) arr[3] = arr[3].slice(0, -1);
           const tmpList = {
             collegeName: arr[0],
             departmentName: arr[1],
