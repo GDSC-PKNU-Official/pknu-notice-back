@@ -55,6 +55,8 @@ export const noticeCrawling = async (college: College): Promise<string> => {
 
 export const noticeListCrawling = async (link: string): Promise<string[]> => {
   const response = await axios.get(link);
+  const hostLink =
+    'https://' + response.request._redirectable._options.hostname;
   const $ = cheerio.load(response.data);
   let tableData = $('table').find('tbody').find('tr');
   tableData = tableData.length > 0 ? tableData : $('ul#board_list').find('li');
@@ -65,7 +67,8 @@ export const noticeListCrawling = async (link: string): Promise<string[]> => {
   tableData.each((index, element) => {
     const anchorElement = $(element).find('a');
     let tmpLink = anchorElement.attr('href');
-    if (tmpLink[0] === '?' || tmpLink[0] === '/') tmpLink = link + tmpLink;
+    if (tmpLink[0] === '?') tmpLink = link + tmpLink;
+    else if (tmpLink[0] === '/') tmpLink = hostLink + tmpLink;
     contentLink.push(tmpLink);
   });
 
