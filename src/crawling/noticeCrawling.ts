@@ -6,11 +6,7 @@ interface Notice {
   title: string;
   path: string;
   description: string;
-  data: string;
-}
-
-interface MajorNotice {
-  notice: Notice[];
+  date: string;
 }
 
 const findNoticeLink = (
@@ -73,4 +69,87 @@ export const noticeListCrawling = async (link: string): Promise<string[]> => {
   });
 
   return contentLink;
+};
+
+export const noticeContentCrawling = async (link: string) => {
+  const response = await axios.get(link);
+  const $ = cheerio.load(response.data);
+
+  const contentData = $('div#board_view');
+  if (contentData.length > 0) {
+    const title = contentData.find('h3').text().trim();
+    const date = contentData.find('p.writer strong').text().trim();
+    const description = contentData
+      .find('div.board_stance')
+      .text()
+      .trim()
+      .replace(/\t|\n/g, '');
+    const notice: Notice = { title, path: link, date, description };
+    return notice;
+  }
+
+  const contentData2 = $('article#bo_v');
+  if (contentData2.length > 0) {
+    const title = contentData2.find('h2#bo_v_title').text().trim();
+    const text = contentData2.find('strong.if_date').text().trim();
+    const dateMatch = text.match(/(\d{2}-\d{2}-\d{2})/);
+    const date = dateMatch ? dateMatch[1] : null;
+    const description = contentData2
+      .find('div#bo_v_con')
+      .text()
+      .trim()
+      .replace(/\t|\n/g, '');
+    const notice: Notice = { title, path: link, date, description };
+    return notice;
+  }
+
+  const tables = $('table.a_brdList, table.c_brdView');
+  if (tables.length > 0) {
+    const title = tables.find('tr').eq(0).text().trim();
+    const date = tables.find('tr').eq(1).find('td').first().text().trim();
+    const description = tables
+      .find('tr')
+      .eq(3)
+      .text()
+      .trim()
+      .replace(/\t|\n/g, '');
+    const notice: Notice = { title, path: link, date, description };
+    return notice;
+  }
+
+  const writeTable = $('table.write');
+  if (writeTable.length > 0) {
+    const title = writeTable.find('tr').first().find('td').text().trim();
+    const date = writeTable
+      .find('tr')
+      .eq(2)
+      .find('td')
+      .text()
+      .trim()
+      .split(' ')[0];
+    const description = writeTable
+      .find('tr')
+      .eq(4)
+      .text()
+      .trim()
+      .replace(/\t|\n/g, '');
+    const notice: Notice = { title, path: link, date, description };
+    return notice;
+  }
+
+  const boardBoxTable = $('div#board_box table');
+  if (boardBoxTable.length > 0) {
+    const title = boardBoxTable.find('tr p').first().text().trim();
+    const date = boardBoxTable.find('tr span').eq(1).text().trim();
+    const description = boardBoxTable
+      .find('tr')
+      .eq(2)
+      .text()
+      .trim()
+      .replace(/\t|\n/g, '');
+    const notice: Notice = { title, path: link, date, description };
+    return notice;
+  }
+
+  console.error('error!!!!');
 };
