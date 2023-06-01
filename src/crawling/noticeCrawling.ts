@@ -52,3 +52,22 @@ export const noticeCrawling = async (college: College): Promise<string> => {
 
   return hostLink + findNoticeLink('공지사항(학부)', college, $);
 };
+
+export const noticeListCrawling = async (link: string): Promise<string[]> => {
+  const response = await axios.get(link);
+  const $ = cheerio.load(response.data);
+  let tableData = $('table').find('tbody').find('tr');
+  tableData = tableData.length > 0 ? tableData : $('ul#board_list').find('li');
+
+  if (tableData.length < 1) console.error('테이블이 없음..');
+  const contentLink: string[] = [];
+
+  tableData.each((index, element) => {
+    const anchorElement = $(element).find('a');
+    let tmpLink = anchorElement.attr('href');
+    if (tmpLink[0] === '?' || tmpLink[0] === '/') tmpLink = link + tmpLink;
+    contentLink.push(tmpLink);
+  });
+
+  return contentLink;
+};
