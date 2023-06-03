@@ -1,13 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { College } from 'src/@types/college';
-
-interface Notice {
-  title: string;
-  path: string;
-  description: string;
-  date: string;
-}
+import { Notice } from 'src/@types/college';
 
 const findNoticeLink = (
   targetName: string,
