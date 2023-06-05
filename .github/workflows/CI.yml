@@ -15,15 +15,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Create .env file
-        run: |
-          echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> .env
-          echo "DATABASE_PORT=${{ secrets.DATABASE_PORT }}" >> .env
-          echo "DATABASE_ROOT_PASSWORD=${{ secrets.DATABASE_ROOT_PASSWORD }}" >> .env
-          echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> .env
-          echo "DATABASE_USER_PASSWORD=${{ secrets.DATABASE_USER_PASSWORD }}" >> .env
-          echo "SERVER_PORT=${{ secrets.SERVER_PORT }}" >> .env
-
       - name: Start docker container
         run: docker-compose -f "docker-compose.yml" up -d --build
 
