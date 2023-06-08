@@ -4,3 +4,10 @@ export interface College {
   departmentSubName: string;
   departmentLink: string;
 }
+
+export interface Notice {
+  title: string;
+  path: string;
+  description: string;
+  date: string;
+}
