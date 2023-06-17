@@ -4,7 +4,7 @@ interface CollegesName {
   collegeName: string;
 }
 
-export const getColleges = async () => {
+export const getCollegesName = async (): Promise<string[]> => {
   return new Promise((resolve, reject) => {
     const getCollegesQuery = `SELECT DISTINCT collegeName from departments ORDER BY collegeName;`;
     db.query(getCollegesQuery, (err: Error, res: CollegesName[]) => {
