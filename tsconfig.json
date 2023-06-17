@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.path.json",
   "compilerOptions": {
-    "types": ["@types/jest"],
     "target": "ESNext",
     "module": "CommonJS",
     "esModuleInterop": true,
@@ -9,7 +8,7 @@
     "noImplicitAny": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "typeRoots": ["../node_modules/@types", "./@types"],
+    "typeRoots": ["./node_modules/@types", "./@types"],
     "isolatedModules": true,
     "disableSourceOfProjectReferenceRedirect": true
   }
