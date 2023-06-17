@@ -1,6 +1,6 @@
-import { env } from 'process';
-
+import majorRouter from '@apis/majorDecision/controller';
 import suggestionRouter from '@apis/suggestion/controller';
+import env from '@config/index';
 import { corsOptions } from '@middlewares/cors';
 import errorHandler from '@middlewares/error-handler';
 import cors from 'cors';
@@ -15,12 +15,13 @@ app.use(express.json());
 app.use(errorHandler);
 
 app.use('/api/suggestion', suggestionRouter);
+app.use('/api/majorDecision', majorRouter);
 
 app.get('/test', (req: Request, res: Response) => {
   console.log('test');
   res.send('Hello');
 });
 
-app.listen(env.PORT, () => {
+app.listen(env.SERVER_PORT, () => {
   console.log('서버 실행중');
 });
