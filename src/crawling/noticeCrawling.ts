@@ -145,5 +145,28 @@ export const noticeContentCrawling = async (link: string) => {
     return notice;
   }
 
+  const bdContTable = $('div.bdCont');
+  if (bdContTable.length > 0) {
+    const title = bdContTable
+      .find('tbody')
+      .first()
+      .find('tr')
+      .first()
+      .text()
+      .trim();
+    const date = bdContTable
+      .find('tbody')
+      .first()
+      .find('tr')
+      .eq(1)
+      .find('td')
+      .eq(3)
+      .text()
+      .trim();
+    const description = bdContTable.find('div.bdvTxt_wrap').text().trim();
+    const notice: Notice = { title, path: link, date, description };
+    return notice;
+  }
+
   console.error('error!!!!');
 };
