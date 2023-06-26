@@ -1,3 +1,5 @@
+import majorRouter from '@apis/majorDecision/controller';
+import noticeRouter from '@apis/notice/controller';
 import suggestionRouter from '@apis/suggestion/controller';
 import env from '@config';
 import { corsOptions } from '@middlewares/cors';
@@ -14,6 +16,8 @@ app.use(express.json());
 app.use(errorHandler);
 
 app.use('/api/suggestion', suggestionRouter);
+app.use('/api/majorDecision', majorRouter);
+app.use('/api/announcement', noticeRouter);
 
 app.get('/test', (req: Request, res: Response) => {
   console.log('test');

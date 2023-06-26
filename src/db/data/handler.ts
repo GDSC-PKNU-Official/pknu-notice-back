@@ -78,3 +78,21 @@ export const saveNoticeToDB = async () => {
     }
   });
 };
+
+export const saveSchoolNoticeToDB = async () => {
+  const pknuNoticeLink = 'https://www.pknu.ac.kr/main/163';
+  const noticeLists = await noticeListCrawling(pknuNoticeLink);
+  for (const list of noticeLists) {
+    const notice = await noticeContentCrawling(list);
+    const saveNoticeQuery =
+      'INSERT INTO schoolnotices (title, link, content, uploadDate) VALUES (?, ?, ?, ?)';
+    const values = [notice.title, notice.path, notice.description, notice.date];
+    db.query(saveNoticeQuery, values, (error) => {
+      if (error) {
+        console.error('데이터 입력 실패', error);
+      } else {
+        console.log('공지사항 입력 성공!');
+      }
+    });
+  }
+};
