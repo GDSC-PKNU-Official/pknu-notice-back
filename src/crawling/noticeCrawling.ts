@@ -3,6 +3,11 @@ import * as cheerio from 'cheerio';
 import { College } from 'src/@types/college';
 import { Notice } from 'src/@types/college';
 
+interface NoticeLists {
+  pinnedNotice?: string[];
+  normalNotice: string[];
+}
+
 const findNoticeLink = (
   targetName: string,
   college: College,
@@ -43,7 +48,9 @@ export const noticeCrawling = async (college: College): Promise<string> => {
   return hostLink + findNoticeLink('공지사항(학부)', college, $);
 };
 
-export const noticeListCrawling = async (link: string): Promise<string[]> => {
+export const noticeListCrawling = async (
+  link: string,
+): Promise<NoticeLists> => {
   const response = await axios.get(link);
   const hostLink =
     'https://' + response.request._redirectable._options.hostname;
@@ -51,18 +58,65 @@ export const noticeListCrawling = async (link: string): Promise<string[]> => {
   let tableData = $('table').find('tbody').find('tr');
   tableData = tableData.length > 0 ? tableData : $('ul#board_list').find('li');
 
-  if (tableData.length < 1) console.error('테이블이 없음..');
-  const contentLink: string[] = [];
+  if (tableData.length < 1) {
+    console.error('테이블이 없음..');
+    return Promise.reject('테이블이 없음..');
+  }
+
+  let beforeDate: string;
+  let flag = true;
+  const pinnedNotice: string[] = [];
+  const normalNotice: string[] = [];
 
   tableData.each((index, element) => {
     const anchorElement = $(element).find('a');
     let tmpLink = anchorElement.attr('href');
-    if (tmpLink[0] === '?') tmpLink = link + tmpLink;
-    else if (tmpLink[0] === '/') tmpLink = hostLink + tmpLink;
-    contentLink.push(tmpLink);
+
+    const findDate = $(element)
+      .text()
+      .match(/\d{4}[-.]\d{2}[-.]\d{2}/);
+
+    if (findDate === null) {
+      // 의공학과는 날짜가 이런 형식이 아니에요..
+      if (tmpLink[0] === '?') tmpLink = link + tmpLink;
+      else if (tmpLink[0] === '/') tmpLink = hostLink + tmpLink;
+      if ($(element).find('.notice_icon').length > 0)
+        pinnedNotice.push(tmpLink);
+      else normalNotice.push(tmpLink);
+      flag = false;
+    } else {
+      const dateMatch = findDate[0];
+      if (index === 0) beforeDate = dateMatch;
+      else {
+        if (beforeDate < dateMatch) {
+          flag = false;
+        }
+        beforeDate = dateMatch;
+      }
+
+      if (tmpLink[0] === '?') tmpLink = link + tmpLink;
+      else if (tmpLink[0] === '/') tmpLink = hostLink + tmpLink;
+
+      if (flag) {
+        pinnedNotice.push(tmpLink);
+      } else {
+        normalNotice.push(tmpLink);
+      }
+    }
   });
 
-  return contentLink;
+  if (flag) {
+    const noticeLists: NoticeLists = {
+      normalNotice: pinnedNotice,
+    };
+    return noticeLists;
+  } else {
+    const noticeLists: NoticeLists = {
+      pinnedNotice,
+      normalNotice,
+    };
+    return noticeLists;
+  }
 };
 
 export const noticeContentCrawling = async (link: string) => {

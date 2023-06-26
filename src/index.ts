@@ -1,7 +1,7 @@
 import majorRouter from '@apis/majorDecision/controller';
 import noticeRouter from '@apis/notice/controller';
 import suggestionRouter from '@apis/suggestion/controller';
-import env from '@config/index';
+import env from '@config';
 import { corsOptions } from '@middlewares/cors';
 import errorHandler from '@middlewares/error-handler';
 import cors from 'cors';

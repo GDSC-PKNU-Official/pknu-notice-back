@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "@apis/*": ["src/apis/*"],
-      "@config/*": ["src/config/*"],
+      "@config": ["src/config"],
       "@db/*": ["src/db/*"],
       "@middlewares/*": ["src/middlewares/*"],
       "@crawling/*": ["src/crawling/*"]

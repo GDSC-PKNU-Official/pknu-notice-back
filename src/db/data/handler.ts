@@ -55,16 +55,24 @@ export const saveNoticeToDB = async () => {
           departmentSubName: row.departmentSubName,
           departmentLink: row.departmentLink,
         };
+        console.log(college.departmentName);
 
         const noticeLink = await noticeCrawling(college);
-        const noticeList = await noticeListCrawling(noticeLink);
-        for (const notice of noticeList) {
+        const noticeLists = await noticeListCrawling(noticeLink);
+        const major =
+          college.departmentSubName === '-'
+            ? college.departmentName
+            : college.departmentSubName;
+
+        if (noticeLists.pinnedNotice !== undefined) {
+          for (const notice of noticeLists.pinnedNotice) {
+            const result = await noticeContentCrawling(notice);
+            saveNotice(result, major + '고정');
+          }
+        }
+        for (const notice of noticeLists.normalNotice) {
           const result = await noticeContentCrawling(notice);
-          const major =
-            college.departmentSubName === '-'
-              ? college.departmentName
-              : college.departmentSubName;
-          saveNotice(result, major);
+          saveNotice(result, major + '일반');
         }
       }
     }
