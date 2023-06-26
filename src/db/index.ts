@@ -1,4 +1,4 @@
-import env from '@config/index';
+import env from '@config';
 import mysql from 'mysql2';
 
 const db = mysql.createConnection({

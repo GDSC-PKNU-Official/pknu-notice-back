@@ -4,7 +4,7 @@ module.exports = {
   verbose: true,
   moduleNameMapper: {
     '@apis/(.*)': '<rootDir>/src/apis/$1',
-    '@config/(.*)': '<rootDir>/src/config/$1',
+    '@config': '<rootDir>/src/config',
     '@db/(.*)': '<rootDir>/src/db/$1',
     '@middlewares/(.*)': '<rootDir>/src/middleswares/$1',
     '@crawling/(.*)': '<rootDir>/src/crawling/$1',

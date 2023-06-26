@@ -1,6 +1,5 @@
-import { env } from 'process';
-
 import suggestionRouter from '@apis/suggestion/controller';
+import env from '@config';
 import { corsOptions } from '@middlewares/cors';
 import errorHandler from '@middlewares/error-handler';
 import cors from 'cors';
@@ -21,6 +20,6 @@ app.get('/test', (req: Request, res: Response) => {
   res.send('Hello');
 });
 
-app.listen(env.PORT, () => {
+app.listen(env.SERVER_PORT, () => {
   console.log('서버 실행중');
 });

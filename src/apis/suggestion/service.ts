@@ -1,4 +1,4 @@
-import env from '@config/index';
+import env from '@config';
 import { Client } from '@notionhq/client';
 import { QueryDatabaseResponse } from '@notionhq/client/build/src/api-endpoints';
 
