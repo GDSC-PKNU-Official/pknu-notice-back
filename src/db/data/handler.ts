@@ -148,7 +148,6 @@ const saveSchoolNotice = async (
           const rows = res as RowDataPacket[];
           if (Array.isArray(rows) && rows.length > 0) {
             const link = rows[0].link;
-            console.log(link);
             resolve(link);
           } else {
             resolve('');
