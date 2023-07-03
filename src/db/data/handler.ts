@@ -89,14 +89,41 @@ export const saveNoticeToDB = async (): Promise<void> => {
           : college.departmentSubName;
 
       if (noticeLists.pinnedNotice !== undefined) {
+        const pinnedNotiQuery = `SELECT link FROM ${major}고정 ORDER BY uploadDate DESC LIMIT 1;`;
+        let pinnedNotiLink = '';
+        db.query(pinnedNotiQuery, (err, res) => {
+          if (err) {
+            console.log(err);
+          } else {
+            const rows = res as RowDataPacket[];
+            if (Array.isArray(rows) && rows.length > 0) {
+              pinnedNotiLink = rows[0].link;
+            }
+          }
+        });
+
         for (const notice of noticeLists.pinnedNotice) {
           const result = await noticeContentCrawling(notice);
+          if (result.path === pinnedNotiLink) break;
           savePromises.push(saveNotice(result, major + '고정'));
         }
       }
 
+      const normalNotiQuery = `SELECT link FROM ${major}고정 ORDER BY uploadDate DESC LIMIT 1;`;
+      let normalNotiLink = '';
+      db.query(normalNotiQuery, (err, res) => {
+        if (err) {
+          console.log(err);
+        } else {
+          const rows = res as RowDataPacket[];
+          if (Array.isArray(rows) && rows.length > 0) {
+            normalNotiLink = rows[0].link;
+          }
+        }
+      });
       for (const notice of noticeLists.normalNotice) {
         const result = await noticeContentCrawling(notice);
+        if (result.path === normalNotiLink) break;
         savePromises.push(saveNotice(result, major + '일반'));
       }
     }
