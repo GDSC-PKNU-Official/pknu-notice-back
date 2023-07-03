@@ -79,13 +79,25 @@ export const saveNoticeToDB = async () => {
   });
 };
 
-export const saveSchoolNoticeToDB = async () => {
-  const pknuNoticeLink = 'https://www.pknu.ac.kr/main/163';
-  const noticeLists = await noticeListCrawling(pknuNoticeLink);
-  for (const list of noticeLists) {
+const saveSchoolNotice = async (notices: string[], mode: string) => {
+  const query = `SELECT link FROM 학교${mode} ORDER BY uploadDate DESC LIMIT 1;`;
+  const res = await new Promise<string>((resolve, reject) => {
+    db.query(query, (err, res) => {
+      if (err) {
+        reject(err);
+      } else {
+        if (typeof res === 'string') resolve(res);
+        reject(err);
+      }
+    });
+  });
+  const saveNoticeQuery =
+    'INSERT INTO schoolnotices (title, link, content, uploadDate) VALUES (?, ?, ?, ?)';
+
+  for (const list of notices) {
     const notice = await noticeContentCrawling(list);
-    const saveNoticeQuery =
-      'INSERT INTO schoolnotices (title, link, content, uploadDate) VALUES (?, ?, ?, ?)';
+    if (res === notice.path) break;
+
     const values = [notice.title, notice.path, notice.description, notice.date];
     db.query(saveNoticeQuery, values, (error) => {
       if (error) {
@@ -95,4 +107,13 @@ export const saveSchoolNoticeToDB = async () => {
       }
     });
   }
+};
+
+export const saveSchoolNoticeToDB = async () => {
+  const pknuNoticeLink = 'https://www.pknu.ac.kr/main/163';
+  const noticeLists = await noticeListCrawling(pknuNoticeLink);
+  if (noticeLists.pinnedNotice !== undefined) {
+    saveSchoolNotice(noticeLists.pinnedNotice, '고정');
+  }
+  saveSchoolNotice(noticeLists.normalNotice, '일반');
 };
