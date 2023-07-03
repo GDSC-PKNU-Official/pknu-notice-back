@@ -59,17 +59,16 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
 export const saveNoticeToDB = async (): Promise<void> => {
   const selectQuery = 'SELECT * FROM departments;';
   try {
-    const results = (await new Promise((resolve, reject) => {
+    const results = await new Promise<College[]>((resolve, reject) => {
       db.query(selectQuery, (error, results) => {
         if (error) {
           console.error('SELECT 오류:', error);
           reject(error);
         } else {
-          if (typeof results === 'string') resolve(results);
-          reject('타입 에러');
+          resolve(results as College[]);
         }
       });
-    })) as College[];
+    });
 
     const savePromises: Promise<void>[] = [];
 
