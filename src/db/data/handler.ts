@@ -3,6 +3,7 @@ import {
   noticeCrawling,
   noticeListCrawling,
 } from '@crawling/noticeCrawling';
+import { RowDataPacket } from 'mysql2';
 import { College, Notice } from 'src/@types/college';
 import db from 'src/db';
 
@@ -106,41 +107,80 @@ export const saveNoticeToDB = async (): Promise<void> => {
   }
 };
 
-const saveSchoolNotice = async (notices: string[], mode: string) => {
+const saveSchoolNotice = async (
+  notices: string[],
+  mode: string,
+): Promise<Promise<void>[]> => {
   const query = `SELECT link FROM 학교${mode} ORDER BY uploadDate DESC LIMIT 1;`;
-  const res = await new Promise<string>((resolve, reject) => {
-    db.query(query, (err, res) => {
-      if (err) {
-        reject(err);
-      } else {
-        if (typeof res === 'string') resolve(res);
-        reject(err);
-      }
+  try {
+    const res = await new Promise<string>((resolve, reject) => {
+      db.query(query, (err, res) => {
+        if (err) {
+          reject(err);
+        } else {
+          const rows = res as RowDataPacket[];
+          if (Array.isArray(rows) && rows.length > 0) {
+            const link = rows[0].link;
+            console.log(link);
+            resolve(link);
+          } else {
+            resolve('');
+          }
+        }
+      });
     });
-  });
-  const saveNoticeQuery =
-    'INSERT INTO schoolnotices (title, link, content, uploadDate) VALUES (?, ?, ?, ?)';
 
-  for (const list of notices) {
-    const notice = await noticeContentCrawling(list);
-    if (res === notice.path) break;
+    const saveNoticeQuery = `INSERT INTO 학교${mode} (title, link, content, uploadDate) VALUES (?, ?, ?, ?);`;
+    const savePromises: Promise<void>[] = [];
 
-    const values = [notice.title, notice.path, notice.description, notice.date];
-    db.query(saveNoticeQuery, values, (error) => {
-      if (error) {
-        console.error('데이터 입력 실패', error);
-      } else {
-        console.log('공지사항 입력 성공!');
-      }
-    });
+    for (const list of notices) {
+      const notice = await noticeContentCrawling(list);
+      if (res === notice.path) break;
+
+      savePromises.push(
+        new Promise<void>((resolve, reject) => {
+          const values = [
+            notice.title,
+            notice.path,
+            notice.description,
+            notice.date,
+          ];
+          db.query(saveNoticeQuery, values, (error) => {
+            if (error) {
+              console.error('데이터 입력 실패', error);
+              reject(error);
+            } else {
+              console.log('학교 공지사항 입력 성공!');
+              resolve();
+            }
+          });
+        }),
+      );
+    }
+
+    return savePromises;
+  } catch (error) {
+    console.error('에러 발생:', error);
+    return [];
   }
 };
 
-export const saveSchoolNoticeToDB = async () => {
+export const saveSchoolNoticeToDB = async (): Promise<void> => {
+  const savePromises: Promise<void>[] = [];
   const pknuNoticeLink = 'https://www.pknu.ac.kr/main/163';
   const noticeLists = await noticeListCrawling(pknuNoticeLink);
   if (noticeLists.pinnedNotice !== undefined) {
-    saveSchoolNotice(noticeLists.pinnedNotice, '고정');
+    const pinnedNoticePromises = await saveSchoolNotice(
+      noticeLists.pinnedNotice,
+      '고정',
+    );
+    savePromises.push(...pinnedNoticePromises);
   }
-  saveSchoolNotice(noticeLists.normalNotice, '일반');
+  const normalNoticePromises = await saveSchoolNotice(
+    noticeLists.normalNotice,
+    '일반',
+  );
+  savePromises.push(...normalNoticePromises);
+
+  await Promise.all(savePromises);
 };
