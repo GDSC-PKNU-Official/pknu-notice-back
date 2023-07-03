@@ -13,6 +13,10 @@ app.use(express.json());
 app.use(errorHandler);
 
 setTimeout(() => {
+  import('src/hooks/startCrawlingData').then((crawling) => {
+    crawling.initialCrawling();
+  });
+
   import('@apis/majorDecision/controller').then((majorRouter) => {
     app.use('/api/majorDecision', majorRouter.default);
   });
