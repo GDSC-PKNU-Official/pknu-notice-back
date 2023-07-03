@@ -6,17 +6,27 @@ import {
 import { College, Notice } from 'src/@types/college';
 import db from 'src/db';
 
-export const saveDepartmentToDB = async (college: College[]) => {
-  for (const data of college) {
+export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
+  const saveCollegePromises = college.map((data) => {
     const saveCollegeQuery = `INSERT INTO departments (collegeName, departmentName, departmentSubName, departmentLink) VALUES ('${data.collegeName}', '${data.departmentName}', '${data.departmentSubName}', '${data.departmentLink}');`;
 
-    db.query(saveCollegeQuery, (error) => {
-      if (error) {
-        console.error('데이터 입력 실패', error);
-      } else {
-        console.log('단과대 입력 성공!');
-      }
+    return new Promise<void>((resolve, reject) => {
+      db.query(saveCollegeQuery, (error) => {
+        if (error) {
+          console.error('데이터 입력 실패', error);
+          reject(error);
+        } else {
+          console.log('단과대 입력 성공!');
+          resolve();
+        }
+      });
     });
+  });
+
+  try {
+    await Promise.all(saveCollegePromises);
+  } catch (err) {
+    console.log(err);
   }
 };
 
