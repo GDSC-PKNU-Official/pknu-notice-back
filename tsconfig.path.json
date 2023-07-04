@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@apis/*": ["src/apis/*"],
+      "@config": ["src/config"],
+      "@db/*": ["src/db/*"],
+      "@middlewares/*": ["src/middlewares/*"],
+      "@crawling/*": ["src/crawling/*"]
+    }
+  },
+  "ts-node": {
+    "files": true,
+    "transpileOnly": true,
+    "require": [
+      "typescript-transform-paths/register",
+      "tsconfig-paths/register"
+    ]
+  }
+}
