@@ -21,11 +21,11 @@ setTimeout(() => {
     app.use('/api/majorDecision', majorRouter.default);
   });
 
-  import('@apis/notice/controller').then((suggestionRouter) => {
+  import('@apis/suggestion/controller').then((suggestionRouter) => {
     app.use('/api/suggestion', suggestionRouter.default);
   });
 
-  import('@apis/suggestion/controller').then((noticeRouter) => {
+  import('@apis/notice/controller').then((noticeRouter) => {
     app.use('/api/announcement', noticeRouter.default);
   });
 }, 15000);
