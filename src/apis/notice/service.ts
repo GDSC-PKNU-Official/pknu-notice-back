@@ -9,7 +9,7 @@ export const getNotices = async (department: string): Promise<Notice[]> => {
       const getNoticesQuery = `SELECT * FROM ${tableName}`;
       db.query(getNoticesQuery, (err: Error, res: Notice[]) => {
         if (err) reject(err);
-        notices.push(...res);
+        if (res !== undefined && res.length > 0) notices.push(...res);
         resolve();
       });
     });
@@ -19,5 +19,6 @@ export const getNotices = async (department: string): Promise<Notice[]> => {
     getNoticesFromTable(`${department}고정`),
     getNoticesFromTable(`${department}일반`),
   ]);
+
   return notices;
 };
