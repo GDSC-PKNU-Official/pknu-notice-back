@@ -56,7 +56,10 @@ export const noticeListCrawling = async (
     'https://' + response.request._redirectable._options.hostname;
   const $ = cheerio.load(response.data);
   let tableData = $('table').find('tbody').find('tr');
-  tableData = tableData.length > 0 ? tableData : $('ul#board_list').find('li');
+  tableData =
+    tableData.length > 0
+      ? tableData
+      : $('ul#board_list, ul.c_glyList').find('li');
 
   if (tableData.length < 1) {
     console.error('테이블이 없음..');
