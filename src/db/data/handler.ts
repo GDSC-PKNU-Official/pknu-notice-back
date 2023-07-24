@@ -34,14 +34,8 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
   const saveNoticeQuery =
     'INSERT INTO ' +
     major +
-    ' (major, title, link, content, uploadDate) VALUES (?, ?, ?, ?, ?)';
-  const values = [
-    major,
-    notice.title,
-    notice.path,
-    notice.description,
-    notice.date,
-  ];
+    ' (title, link, content, uploadDate) VALUES (?, ?, ?, ?)';
+  const values = [notice.title, notice.path, notice.description, notice.date];
 
   return new Promise((resolve, reject) => {
     db.query(saveNoticeQuery, values, (error) => {

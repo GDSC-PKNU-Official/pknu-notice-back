@@ -28,12 +28,10 @@ const createNoticeTable = (college: College[]) => {
     for (const tableName of [`${major}고정`, `${major}일반`]) {
       const createTableQuery = `CREATE TABLE ${tableName} (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                major VARCHAR(255) NOT NULL,
                 title VARCHAR(255) NOT NULL,
                 link VARCHAR(255) NOT NULL,
                 content TEXT NOT NULL,
                 uploadDate VARCHAR(255) NOT NULL,
-                graduate VARCHAR(255)
             );`;
 
       db.query(createTableQuery, (error) => {
