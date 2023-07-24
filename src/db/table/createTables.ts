@@ -47,7 +47,7 @@ const createNoticeTable = (college: College[]) => {
                 title VARCHAR(255) NOT NULL,
                 link VARCHAR(255) NOT NULL,
                 content TEXT NOT NULL,
-                uploadDate VARCHAR(255) NOT NULL,
+                uploadDate VARCHAR(255) NOT NULL
             );`;
 
       db.query(createTableQuery, (error) => {
