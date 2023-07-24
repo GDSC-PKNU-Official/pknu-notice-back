@@ -19,6 +19,22 @@ const createDepartmentTable = () => {
   });
 };
 
+const createGraduationTable = () => {
+  const createGraduationQuery = `CREATE TABLE graduation (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    department VARCHAR(255) NOT NULL,
+    link VARCHAR(255) NOT NULL
+  );`;
+
+  db.query(createGraduationQuery, (error) => {
+    if (error) {
+      console.log('졸업요건 테이블 생성 실패', error);
+    } else {
+      console.log('졸업요건 테이블 생성 성공!');
+    }
+  });
+};
+
 const createNoticeTable = (college: College[]) => {
   for (const data of college) {
     const major =
@@ -67,6 +83,7 @@ const createSchoolNoticeTable = () => {
 
 const createAllTables = (college: College[]) => {
   createDepartmentTable();
+  createGraduationTable();
   createSchoolNoticeTable();
   createNoticeTable(college);
 };
