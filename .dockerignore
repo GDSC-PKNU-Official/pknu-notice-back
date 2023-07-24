@@ -4,3 +4,7 @@ dist
 sql
 .env.vault
 node_modules
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
