@@ -1,0 +1,6 @@
+.github
+.husky
+dist
+sql
+.env.vault
+node_modules
