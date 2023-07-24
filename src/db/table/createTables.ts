@@ -22,11 +22,36 @@ const createNoticeTable = (college: College[]) => {
         if (error) {
           console.log('테이블 생성 실패', error);
         } else {
-          console.log('테이블 생성 성공!');
+          console.log('학과 테이블 생성 성공!');
         }
       });
     }
   }
 };
 
-export default createNoticeTable;
+const createSchoolNoticeTable = () => {
+  for (const tableName of [`학교고정`, `학교일반`]) {
+    const createTableQuery = `CREATE TABLE ${tableName} (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      title VARCHAR(255) NOT NULL,
+      link VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      uploadDate VARCHAR(255) NOT NULL
+          );`;
+
+    db.query(createTableQuery, (error) => {
+      if (error) {
+        console.log('테이블 생성 실패', error);
+      } else {
+        console.log('학교 테이블 생성 성공!');
+      }
+    });
+  }
+};
+
+const createAllTables = (college: College[]) => {
+  createSchoolNoticeTable();
+  createNoticeTable(college);
+};
+
+export default createAllTables;
