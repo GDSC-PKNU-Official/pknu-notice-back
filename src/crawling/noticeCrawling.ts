@@ -11,7 +11,7 @@ interface NoticeLists {
 const findNoticeLink = (
   targetName: string,
   college: College,
-  $: cheerio.CheerioAPI,
+  $: cheerio.Root,
 ): string => {
   const selector = `:contains("${targetName}")`;
   const targetElements = $(selector);
@@ -72,14 +72,21 @@ export const noticeListCrawling = async (
     const anchorElement = $(element).find('a');
     let tmpLink = anchorElement.attr('href');
 
+    if (tmpLink[0] === '?') tmpLink = link + tmpLink;
+    else if (tmpLink[0] === '/') tmpLink = hostLink + tmpLink;
+
     const findDate = $(element)
       .text()
       .match(/\d{4}[-.]\d{2}[-.]\d{2}/);
 
-    if (findDate === null) {
-      // 의공학과는 날짜가 이런 형식이 아니에요..
-      if (tmpLink[0] === '?') tmpLink = link + tmpLink;
-      else if (tmpLink[0] === '/') tmpLink = hostLink + tmpLink;
+    if (link === 'http://geoinfo.pknu.ac.kr/05piazza/08.php') {
+      // 공간정보시스템공학과
+      if ($(element).find('td').first().text().trim() === '공지')
+        pinnedNotice.push(tmpLink);
+      else normalNotice.push(tmpLink);
+      flag = false;
+    } else if (link === 'http://bme.pknu.ac.kr/bbs/board.php?bo_table=notice') {
+      // 의공학과
       if ($(element).find('.notice_icon').length > 0)
         pinnedNotice.push(tmpLink);
       else normalNotice.push(tmpLink);
@@ -93,9 +100,6 @@ export const noticeListCrawling = async (
         }
         beforeDate = dateMatch;
       }
-
-      if (tmpLink[0] === '?') tmpLink = link + tmpLink;
-      else if (tmpLink[0] === '/') tmpLink = hostLink + tmpLink;
 
       if (flag) {
         pinnedNotice.push(tmpLink);
