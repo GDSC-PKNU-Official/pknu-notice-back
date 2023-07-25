@@ -14,7 +14,7 @@
   "scripts": {
     "start": "ts-node --transpile-only -r tsconfig-paths/register src/index.ts",
     "test": "jest --forceExit --detectOpenHandles",
-    "dev": "node-dev src/index.ts",
+    "dev": "NODE_ENV=development node-dev src/index.ts",
     "postinstall": "husky install",
     "lint-staged": "lint-staged"
   },
