@@ -8,6 +8,7 @@ import cors from 'cors';
 import express, { Request, Response } from 'express';
 import morgan from 'morgan';
 import { initialCrawling } from 'src/hooks/startCrawlingData';
+import './hooks/cronNoticeCrawling';
 
 const app = express();
 app.use(morgan('dev'));
