@@ -8,19 +8,15 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   DBHost = env.DB_HOST;
 }
-const db = mysql.createConnection({
+const db = mysql.createPool({
   host: DBHost,
   user: env.DB_USER,
   password: env.DB_PW,
   database: env.DB_NAME,
-});
-
-db.connect((error) => {
-  if (error) {
-    console.error('MySQL 연결 실패:', error);
-  } else {
-    console.log('MySQL 연결 성공!');
-  }
+  waitForConnections: true,
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
 });
 
 export default db;
