@@ -7,6 +7,7 @@ import errorHandler from '@middlewares/error-handler';
 import cors from 'cors';
 import express, { Request, Response } from 'express';
 import morgan from 'morgan';
+import { initialCrawling } from 'src/hooks/startCrawlingData';
 
 const app = express();
 app.use(morgan('dev'));
@@ -14,6 +15,8 @@ app.use(cors(corsOptions));
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 app.use(express.json());
 app.use(errorHandler);
+
+initialCrawling();
 
 app.use('/api/suggestion', suggestionRouter);
 app.use('/api/majorDecision', majorRouter);

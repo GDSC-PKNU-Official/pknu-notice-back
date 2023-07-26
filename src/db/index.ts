@@ -1,8 +1,15 @@
 import env from '@config';
 import mysql from 'mysql2';
 
+let DBHost;
+
+if (process.env.NODE_ENV === 'development') {
+  DBHost = 'database';
+} else {
+  DBHost = env.DB_HOST;
+}
 const db = mysql.createConnection({
-  host: 'database',
+  host: DBHost,
   user: env.DB_USER,
   password: env.DB_PW,
   database: env.DB_NAME,
