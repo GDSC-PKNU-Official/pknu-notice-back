@@ -29,5 +29,5 @@ app.get('/test', (req: Request, res: Response) => {
 });
 
 app.listen(env.SERVER_PORT, () => {
-  console.log('서버 실행중');
+  console.log(env.SERVER_PORT, '포트 서버 실행중');
 });
