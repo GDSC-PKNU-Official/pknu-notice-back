@@ -43,7 +43,7 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
         console.error('데이터 입력 실패', error);
         reject(error);
       } else {
-        console.log('공지사항 입력 성공!');
+        console.log(major + '공지사항 입력 성공!');
         resolve();
       }
     });
@@ -84,7 +84,7 @@ export const saveNoticeToDB = async (): Promise<void> => {
       if (noticeLists.pinnedNotice !== undefined) {
         const pinnedNotiQuery = `SELECT link FROM ${major}고정 ORDER BY uploadDate DESC LIMIT 1;`;
         let pinnedNotiLink = '';
-        db.query(pinnedNotiQuery, (err, res) => {
+        db.query(pinnedNotiQuery, async (err, res) => {
           if (err) {
             console.log(err);
           } else {
@@ -92,19 +92,18 @@ export const saveNoticeToDB = async (): Promise<void> => {
             if (Array.isArray(rows) && rows.length > 0) {
               pinnedNotiLink = rows[0].link;
             }
+            for (const notice of noticeLists.pinnedNotice) {
+              const result = await noticeContentCrawling(notice);
+              if (result.path === pinnedNotiLink) break;
+              savePromises.push(saveNotice(result, major + '고정'));
+            }
           }
         });
-
-        for (const notice of noticeLists.pinnedNotice) {
-          const result = await noticeContentCrawling(notice);
-          if (result.path === pinnedNotiLink) break;
-          savePromises.push(saveNotice(result, major + '고정'));
-        }
       }
 
-      const normalNotiQuery = `SELECT link FROM ${major}고정 ORDER BY uploadDate DESC LIMIT 1;`;
+      const normalNotiQuery = `SELECT link FROM ${major}일반 ORDER BY uploadDate DESC LIMIT 1;`;
       let normalNotiLink = '';
-      db.query(normalNotiQuery, (err, res) => {
+      db.query(normalNotiQuery, async (err, res) => {
         if (err) {
           console.log(err);
         } else {
@@ -112,13 +111,17 @@ export const saveNoticeToDB = async (): Promise<void> => {
           if (Array.isArray(rows) && rows.length > 0) {
             normalNotiLink = rows[0].link;
           }
+          console.log('일반', normalNotiLink);
+          for (const notice of noticeLists.normalNotice) {
+            const result = await noticeContentCrawling(notice);
+            if (result.path === normalNotiLink) {
+              console.log(major, '일반 좀 되라');
+              break;
+            }
+            savePromises.push(saveNotice(result, major + '일반'));
+          }
         }
       });
-      for (const notice of noticeLists.normalNotice) {
-        const result = await noticeContentCrawling(notice);
-        if (result.path === normalNotiLink) break;
-        savePromises.push(saveNotice(result, major + '일반'));
-      }
     }
 
     await Promise.all(savePromises);
