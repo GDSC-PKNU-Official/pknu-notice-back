@@ -24,7 +24,7 @@ app.use('/api/majorDecision', majorRouter);
 app.use('/api/announcement', noticeRouter);
 
 app.get('/test', (req: Request, res: Response) => {
-  console.log('test');
+  console.log('tet');
   res.send('Hello');
 });
 
