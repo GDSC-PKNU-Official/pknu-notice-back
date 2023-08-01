@@ -27,5 +27,3 @@ export const initialCrawling = () => {
     console.log(err);
   }
 };
-
-// const startNoticeCrawling = () => {};

@@ -8,6 +8,7 @@ import cors from 'cors';
 import express, { Request, Response } from 'express';
 import morgan from 'morgan';
 import { initialCrawling } from 'src/hooks/startCrawlingData';
+import './hooks/cronNoticeCrawling';
 
 const app = express();
 app.use(morgan('dev'));
@@ -28,5 +29,5 @@ app.get('/test', (req: Request, res: Response) => {
 });
 
 app.listen(env.SERVER_PORT, () => {
-  console.log('서버 실행중');
+  console.log(env.SERVER_PORT, '포트 서버 실행중');
 });
