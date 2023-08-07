@@ -111,11 +111,9 @@ export const saveNoticeToDB = async (): Promise<void> => {
           if (Array.isArray(rows) && rows.length > 0) {
             normalNotiLink = rows[0].link;
           }
-          console.log('일반', normalNotiLink);
           for (const notice of noticeLists.normalNotice) {
             const result = await noticeContentCrawling(notice);
             if (result.path === normalNotiLink) {
-              console.log(major, '일반 좀 되라');
               break;
             }
             savePromises.push(saveNotice(result, major + '일반'));
