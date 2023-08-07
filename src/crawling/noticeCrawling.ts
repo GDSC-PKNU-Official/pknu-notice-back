@@ -94,6 +94,8 @@ export const noticeListCrawling = async (
         pinnedNotice.push(tmpLink);
       else normalNotice.push(tmpLink);
       flag = false;
+    } else if (link === 'https://visual.pknu.ac.kr/visual/3674') {
+      pinnedNotice.push(tmpLink);
     } else {
       const dateMatch = findDate[0];
       if (index === 0) beforeDate = dateMatch;
