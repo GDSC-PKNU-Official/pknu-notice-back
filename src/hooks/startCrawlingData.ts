@@ -20,9 +20,9 @@ export const initialCrawling = () => {
         const collegeList = await collegeCrawling();
         createNoticeTable(collegeList);
         await saveDepartmentToDB(collegeList);
+        await saveGraduationRequirementToDB();
         await saveSchoolNoticeToDB();
         await saveNoticeToDB();
-        await saveGraduationRequirementToDB();
       }
     });
   } catch (err) {
