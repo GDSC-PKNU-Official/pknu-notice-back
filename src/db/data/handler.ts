@@ -82,7 +82,7 @@ export const saveNoticeToDB = async (): Promise<void> => {
           : college.departmentSubName;
 
       if (noticeLists.pinnedNotice !== undefined) {
-        const pinnedNotiQuery = `SELECT link FROM ${major}고정 ORDER BY uploadDate DESC LIMIT 1;`;
+        const pinnedNotiQuery = `SELECT link FROM ${major}고정 ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC LIMIT 1;`;
         let pinnedNotiLink = '';
         db.query(pinnedNotiQuery, async (err, res) => {
           if (err) {
@@ -101,7 +101,7 @@ export const saveNoticeToDB = async (): Promise<void> => {
         });
       }
 
-      const normalNotiQuery = `SELECT link FROM ${major}일반 ORDER BY uploadDate DESC LIMIT 1;`;
+      const normalNotiQuery = `SELECT link FROM ${major}일반 ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC LIMIT 1;`;
       let normalNotiLink = '';
       db.query(normalNotiQuery, async (err, res) => {
         if (err) {
@@ -111,11 +111,9 @@ export const saveNoticeToDB = async (): Promise<void> => {
           if (Array.isArray(rows) && rows.length > 0) {
             normalNotiLink = rows[0].link;
           }
-          console.log('일반', normalNotiLink);
           for (const notice of noticeLists.normalNotice) {
             const result = await noticeContentCrawling(notice);
             if (result.path === normalNotiLink) {
-              console.log(major, '일반 좀 되라');
               break;
             }
             savePromises.push(saveNotice(result, major + '일반'));
@@ -134,7 +132,7 @@ const saveSchoolNotice = async (
   notices: string[],
   mode: string,
 ): Promise<Promise<void>[]> => {
-  const query = `SELECT link FROM 학교${mode} ORDER BY uploadDate DESC LIMIT 1;`;
+  const query = `SELECT link FROM 학교${mode} ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC LIMIT 1;`;
   try {
     const res = await new Promise<string>((resolve, reject) => {
       db.query(query, (err, res) => {

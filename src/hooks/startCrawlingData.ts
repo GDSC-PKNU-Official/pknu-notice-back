@@ -1,4 +1,5 @@
 import { collegeCrawling } from '@crawling/collegeCrawling';
+import { saveGraduationRequirementToDB } from '@db/data/graduation';
 import {
   saveDepartmentToDB,
   saveNoticeToDB,
@@ -19,6 +20,7 @@ export const initialCrawling = () => {
         const collegeList = await collegeCrawling();
         createNoticeTable(collegeList);
         await saveDepartmentToDB(collegeList);
+        await saveGraduationRequirementToDB();
         await saveSchoolNoticeToDB();
         await saveNoticeToDB();
       }

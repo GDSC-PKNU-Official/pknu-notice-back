@@ -1,3 +1,4 @@
+import graduationRouter from '@apis/graduation/controller';
 import majorRouter from '@apis/majorDecision/controller';
 import noticeRouter from '@apis/notice/controller';
 import suggestionRouter from '@apis/suggestion/controller';
@@ -22,6 +23,7 @@ initialCrawling();
 app.use('/api/suggestion', suggestionRouter);
 app.use('/api/majorDecision', majorRouter);
 app.use('/api/announcement', noticeRouter);
+app.use('/api/graduation', graduationRouter);
 
 app.get('/test', (req: Request, res: Response) => {
   console.log('tet');

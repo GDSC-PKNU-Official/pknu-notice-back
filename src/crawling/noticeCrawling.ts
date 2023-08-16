@@ -94,6 +94,8 @@ export const noticeListCrawling = async (
         pinnedNotice.push(tmpLink);
       else normalNotice.push(tmpLink);
       flag = false;
+    } else if (link === 'https://visual.pknu.ac.kr/visual/3674') {
+      pinnedNotice.push(tmpLink);
     } else {
       const dateMatch = findDate[0];
       if (index === 0) beforeDate = dateMatch;
@@ -132,7 +134,7 @@ export const noticeContentCrawling = async (link: string) => {
 
   const contentData = $('div#board_view');
   if (contentData.length > 0) {
-    const title = contentData.find('h3').text().trim();
+    const title = contentData.find('h3').first().text().trim();
     const date = contentData.find('p.writer strong').text().trim();
     const description = contentData
       .find('div.board_stance')

@@ -26,7 +26,9 @@ export const collegeCrawling = async (): Promise<College[]> => {
           arr[0] !== undefined &&
           arr[0] !== '미래융합대학' &&
           arr[2] !== '통계·데이터사이언스전공' &&
-          arr[3] !== undefined
+          arr[3] !== undefined &&
+          !arr[1].includes('신설') &&
+          !arr[2].includes('신설')
         ) {
           if (arr[3].endsWith('/')) arr[3] = arr[3].slice(0, -1);
           const tmpList = {
