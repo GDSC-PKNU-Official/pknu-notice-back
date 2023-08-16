@@ -3,6 +3,7 @@ import majorRouter from '@apis/majorDecision/controller';
 import noticeRouter from '@apis/notice/controller';
 import suggestionRouter from '@apis/suggestion/controller';
 import env from '@config';
+import { saveGraduationRequirementToDB } from '@db/data/graduation';
 import { corsOptions } from '@middlewares/cors';
 import errorHandler from '@middlewares/error-handler';
 import cors from 'cors';
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(errorHandler);
 
 initialCrawling();
+saveGraduationRequirementToDB();
 
 app.use('/api/suggestion', suggestionRouter);
 app.use('/api/majorDecision', majorRouter);
