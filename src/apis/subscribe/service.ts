@@ -24,7 +24,6 @@ export const subscribeMajor = async (
   subscription: UserPushInfo,
   major: string,
 ) => {
-  console.log(subscription, major);
   return new Promise<boolean>((resolve, reject) => {
     try {
       const subscribeMajorQuery =
@@ -42,6 +41,27 @@ export const subscribeMajor = async (
     } catch (error) {
       console.error(error);
       reject(false);
+    }
+  });
+};
+
+export const unsubscribeMajor = async (
+  subscription: UserPushInfo,
+  major: string,
+) => {
+  return new Promise<boolean>((resolve, reject) => {
+    try {
+      const unSubscribeMajorQuery = `DELETE FROM ${major}구독 WHERE user like '%${subscription.endpoint}%'`;
+      db.query(unSubscribeMajorQuery, (error, res) => {
+        if (error) {
+          console.error('구독취소 실패');
+          reject(false);
+        }
+        console.log('구독취소 성공');
+        resolve(true);
+      });
+    } catch (error) {
+      console.error(error);
     }
   });
 };
