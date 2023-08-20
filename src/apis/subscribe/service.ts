@@ -66,24 +66,22 @@ export const unsubscribeMajor = async (
   });
 };
 
-export const pushNotification = async (major: string) => {
-  return new Promise<boolean>((resolve, reject) => {
-    const query = `SELECT user FROM ${major}구독`;
-    db.query(query, (err: Error, res: SubscribeUser[]) => {
-      if (err) reject(false);
+export const pushNotification = (major: string) => {
+  const query = `SELECT user FROM ${major}구독`;
+  db.query(query, (err: Error, res: SubscribeUser[]) => {
+    if (err) console.error(err);
 
-      const message: PushMessage = {
-        title: `${major} 알림`,
-        body: '새로운 공지가 추가됐어요',
-        icon: './icons/icon-192x192.png',
-      };
+    const message: PushMessage = {
+      title: `${major} 알림`,
+      body: '새로운 공지가 추가됐어요',
+      icon: './icons/icon-192x192.png',
+    };
 
-      for (const userInfo of res) {
-        webpush.sendNotification(
-          JSON.parse(userInfo.user),
-          JSON.stringify(message),
-        );
-      }
-    });
+    for (const userInfo of res) {
+      webpush.sendNotification(
+        JSON.parse(userInfo.user),
+        JSON.stringify(message),
+      );
+    }
   });
 };

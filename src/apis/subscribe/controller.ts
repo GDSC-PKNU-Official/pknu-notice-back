@@ -31,7 +31,7 @@ router.delete('/major', async (req: Request, res: Response) => {
 router.post('/push', async (req: Request, res: Response) => {
   try {
     const { major } = req.body.data;
-    await pushNotification(major);
+    pushNotification(major);
   } catch (error) {
     console.error(error);
   } finally {
