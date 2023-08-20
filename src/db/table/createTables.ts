@@ -71,14 +71,14 @@ const createSubscribeTable = (college: College[]) => {
     const tableName = `${major}구독`;
     const createTableQuery = `CREATE TABLE ${tableName} (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                user VARCHAR(600) NOT NULL UNIQUE,
+                user VARCHAR(600) NOT NULL UNIQUE
             );`;
 
     db.query(createTableQuery, (error) => {
       if (error) {
         console.log('테이블 생성 실패', error);
       } else {
-        console.log('학과공지 테이블 생성 성공!');
+        console.log('학과구독 테이블 생성 성공!');
       }
     });
   }
