@@ -1,4 +1,5 @@
 import db from '@db/index';
+import webpush from 'web-push';
 
 interface UserPushInfo {
   endpoint: string;
@@ -7,6 +8,16 @@ interface UserPushInfo {
     p256dh: string;
     auth: string;
   };
+}
+
+interface PushMessage {
+  title: string;
+  body: string;
+  icon: string;
+}
+
+interface SubscribeUser {
+  user: string;
 }
 
 export const subscribeMajor = async (
@@ -32,5 +43,27 @@ export const subscribeMajor = async (
       console.error(error);
       reject(false);
     }
+  });
+};
+
+export const pushNotification = async (major: string) => {
+  return new Promise<boolean>((resolve, reject) => {
+    const query = `SELECT user FROM ${major}구독`;
+    db.query(query, (err: Error, res: SubscribeUser[]) => {
+      if (err) reject(false);
+
+      const message: PushMessage = {
+        title: `${major} 알림`,
+        body: '새로운 공지가 추가됐어요',
+        icon: './icons/icon-192x192.png',
+      };
+
+      for (const userInfo of res) {
+        webpush.sendNotification(
+          JSON.parse(userInfo.user),
+          JSON.stringify(message),
+        );
+      }
+    });
   });
 };
