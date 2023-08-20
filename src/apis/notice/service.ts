@@ -8,7 +8,7 @@ interface SeparateNoti {
 
 const getNoticesFromTable = (tableName: string) => {
   return new Promise<Notice[]>((resolve, reject) => {
-    const getNoticesQuery = `SELECT * FROM ${tableName}`;
+    const getNoticesQuery = `SELECT * FROM ${tableName} ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC;`;
     db.query(getNoticesQuery, (err: Error, res: Notice[]) => {
       if (err) reject(err);
       if (res !== undefined && res.length > 0) resolve(res);
