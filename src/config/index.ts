@@ -12,4 +12,7 @@ export default {
   DB_PORT: process.env.DATABASE_PORT,
   NOTION_API_KEY: process.env.NOTION_API_KEY,
   NOTION_DATABASE_ID: process.env.NOTION_DATABASE_ID,
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+  ROOT_EMAIL: process.env.ROOT_EMAIL,
 };
