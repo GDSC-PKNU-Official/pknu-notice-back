@@ -15,4 +15,5 @@ export default {
   VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
   VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
   ROOT_EMAIL: process.env.ROOT_EMAIL,
+  SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL,
 };
