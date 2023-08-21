@@ -62,8 +62,10 @@ export const noticeListCrawling = async (
       : $('ul#board_list, ul.c_glyList').find('li');
 
   if (tableData.length < 1) {
-    console.error('테이블이 없음..');
-    return Promise.reject('테이블이 없음..');
+    const tmp: NoticeLists = {
+      normalNotice: [],
+    };
+    return Promise.reject(tmp);
   }
 
   let beforeDate: string;

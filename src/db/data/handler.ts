@@ -6,6 +6,7 @@ import {
 import { RowDataPacket } from 'mysql2';
 import { College, Notice } from 'src/@types/college';
 import db from 'src/db';
+import notificationToSlack from 'src/hooks/notificateToSlack';
 
 export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
   const saveCollegePromises = college.map((data) => {
@@ -71,6 +72,11 @@ export const saveNoticeToDB = async (): Promise<void> => {
 
     const noticeLink = await noticeCrawling(college);
     const noticeLists = await noticeListCrawling(noticeLink);
+    if (noticeLists.normalNotice.length === 0) {
+      notificationToSlack(`${noticeLink} 크롤링 실패`);
+      continue;
+    }
+
     const major =
       college.departmentSubName === '-'
         ? college.departmentName
