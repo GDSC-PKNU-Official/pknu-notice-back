@@ -95,6 +95,10 @@ export const saveNoticeToDB = async (): Promise<void> => {
           }
           for (const notice of noticeLists.pinnedNotice) {
             const result = await noticeContentCrawling(notice);
+            if (result.path === '') {
+              notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+              continue;
+            }
             if (result.path === pinnedNotiLink) break;
             savePromises.push(saveNotice(result, major + '고정'));
           }
@@ -115,6 +119,10 @@ export const saveNoticeToDB = async (): Promise<void> => {
 
           for (const notice of noticeLists.normalNotice) {
             const result = await noticeContentCrawling(notice);
+            if (result.path === '') {
+              notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+              continue;
+            }
             if (result.path === normalNotiLink) {
               break;
             }
@@ -156,6 +164,10 @@ const saveSchoolNotice = async (
 
   for (const list of notices) {
     const notice = await noticeContentCrawling(list);
+    if (notice.path === '') {
+      notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+      continue;
+    }
     if (res === notice.path) break;
 
     savePromises.push(

@@ -130,7 +130,7 @@ export const noticeListCrawling = async (
   }
 };
 
-export const noticeContentCrawling = async (link: string) => {
+export const noticeContentCrawling = async (link: string): Promise<Notice> => {
   const response = await axios.get(link);
   const $ = cheerio.load(response.data);
 
@@ -233,5 +233,5 @@ export const noticeContentCrawling = async (link: string) => {
     return notice;
   }
 
-  console.error('error!!!!');
+  return { title: '', path: '', date: '', description: '' };
 };
