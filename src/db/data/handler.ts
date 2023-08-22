@@ -6,19 +6,20 @@ import {
 import { RowDataPacket } from 'mysql2';
 import { College, Notice } from 'src/@types/college';
 import db from 'src/db';
+import notificationToSlack from 'src/hooks/notificateToSlack';
 
 export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
   const saveCollegePromises = college.map((data) => {
     const saveCollegeQuery = `INSERT INTO departments (collegeName, departmentName, departmentSubName, departmentLink) VALUES ('${data.collegeName}', '${data.departmentName}', '${data.departmentSubName}', '${data.departmentLink}');`;
-    return new Promise<void>((resolve, reject) => {
-      db.query(saveCollegeQuery, (error) => {
+    return new Promise<void>((resolve) => {
+      db.query(saveCollegeQuery, async (error) => {
         if (error) {
-          console.error('데이터 입력 실패', error);
-          reject(error);
-        } else {
-          console.log('단과대 입력 성공!');
+          await notificationToSlack(`DB에 학과 삽입 실패`);
           resolve();
+          return;
         }
+        console.log('단과대 입력 성공!');
+        resolve();
       });
     });
   });
@@ -33,29 +34,27 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
     ' (title, link, content, uploadDate) VALUES (?, ?, ?, ?)';
   const values = [notice.title, notice.path, notice.description, notice.date];
 
-  return new Promise((resolve, reject) => {
-    db.query(saveNoticeQuery, values, (error) => {
-      if (error) {
-        console.error('데이터 입력 실패', error);
-        reject(error);
-      } else {
-        console.log(major + '공지사항 입력 성공!');
-        resolve();
+  return new Promise((resolve) => {
+    db.query(saveNoticeQuery, values, (err) => {
+      if (err) {
+        console.log(`${major} 공지사항 입력 실패`);
       }
+      console.log(`${major} 공지사항 입력 성공`);
+      resolve();
     });
   });
 };
 
 export const saveNoticeToDB = async (): Promise<void> => {
   const selectQuery = 'SELECT * FROM departments;';
-  const results = await new Promise<College[]>((resolve, reject) => {
+  const results = await new Promise<College[]>((resolve) => {
     db.query(selectQuery, (error, results) => {
       if (error) {
-        console.error('SELECT 오류:', error);
-        reject(error);
-      } else {
-        resolve(results as College[]);
+        notificationToSlack(selectQuery + '실패');
+        resolve([]);
+        return;
       }
+      resolve(results as College[]);
     });
   });
 
@@ -71,6 +70,11 @@ export const saveNoticeToDB = async (): Promise<void> => {
 
     const noticeLink = await noticeCrawling(college);
     const noticeLists = await noticeListCrawling(noticeLink);
+    if (noticeLists.normalNotice.length === 0) {
+      notificationToSlack(`${noticeLink} 크롤링 실패`);
+      continue;
+    }
+
     const major =
       college.departmentSubName === '-'
         ? college.departmentName
@@ -81,17 +85,21 @@ export const saveNoticeToDB = async (): Promise<void> => {
       let pinnedNotiLink = '';
       db.query(pinnedNotiQuery, async (err, res) => {
         if (err) {
-          console.log(err);
-        } else {
-          const rows = res as RowDataPacket[];
-          if (Array.isArray(rows) && rows.length > 0) {
-            pinnedNotiLink = rows[0].link;
+          await notificationToSlack(pinnedNotiQuery.split('ORDER')[0] + '에러');
+          return;
+        }
+        const rows = res as RowDataPacket[];
+        if (Array.isArray(rows) && rows.length > 0) {
+          pinnedNotiLink = rows[0].link;
+        }
+        for (const notice of noticeLists.pinnedNotice) {
+          const result = await noticeContentCrawling(notice);
+          if (result.path === '') {
+            notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+            continue;
           }
-          for (const notice of noticeLists.pinnedNotice) {
-            const result = await noticeContentCrawling(notice);
-            if (result.path === pinnedNotiLink) break;
-            savePromises.push(saveNotice(result, major + '고정'));
-          }
+          if (result.path === pinnedNotiLink) break;
+          savePromises.push(saveNotice(result, major + '고정'));
         }
       });
     }
@@ -100,23 +108,22 @@ export const saveNoticeToDB = async (): Promise<void> => {
     let normalNotiLink = '';
     db.query(normalNotiQuery, async (err, res) => {
       if (err) {
-        console.log(err);
-      } else {
-        try {
-          const rows = res as RowDataPacket[];
-          if (Array.isArray(rows) && rows.length > 0)
-            normalNotiLink = rows[0].link;
+        await notificationToSlack(normalNotiQuery.split('ORDER')[0] + '에러');
+        return;
+      }
+      const rows = res as RowDataPacket[];
+      if (Array.isArray(rows) && rows.length > 0) normalNotiLink = rows[0].link;
 
-          for (const notice of noticeLists.normalNotice) {
-            const result = await noticeContentCrawling(notice);
-            if (result.path === normalNotiLink) {
-              break;
-            }
-            savePromises.push(saveNotice(result, major + '일반'));
-          }
-        } catch (error) {
-          console.log('cheerio 에러', error);
+      for (const notice of noticeLists.normalNotice) {
+        const result = await noticeContentCrawling(notice);
+        if (result.path === '') {
+          notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+          continue;
         }
+        if (result.path === normalNotiLink) {
+          break;
+        }
+        savePromises.push(saveNotice(result, major + '일반'));
       }
     });
   }
@@ -129,19 +136,19 @@ const saveSchoolNotice = async (
   mode: string,
 ): Promise<Promise<void>[]> => {
   const query = `SELECT link FROM 학교${mode} ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC LIMIT 1;`;
-  const res = await new Promise<string>((resolve, reject) => {
-    db.query(query, (err, res) => {
+  const res = await new Promise<string>((resolve) => {
+    db.query(query, async (err, res) => {
       if (err) {
-        reject(err);
-      } else {
-        const rows = res as RowDataPacket[];
-        if (Array.isArray(rows) && rows.length > 0) {
-          const link = rows[0].link;
-          resolve(link);
-        } else {
-          resolve('');
-        }
+        await notificationToSlack(query.split('ORDER')[0]);
+        resolve('');
+        return;
       }
+      const rows = res as RowDataPacket[];
+      if (Array.isArray(rows) && rows.length > 0) {
+        const link = rows[0].link;
+        resolve(link);
+      }
+      resolve('');
     });
   });
 
@@ -150,24 +157,28 @@ const saveSchoolNotice = async (
 
   for (const list of notices) {
     const notice = await noticeContentCrawling(list);
+    if (notice.path === '') {
+      notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+      continue;
+    }
     if (res === notice.path) break;
 
     savePromises.push(
-      new Promise<void>((resolve, reject) => {
+      new Promise<void>((resolve) => {
         const values = [
           notice.title,
           notice.path,
           notice.description,
           notice.date,
         ];
-        db.query(saveNoticeQuery, values, (error) => {
+        db.query(saveNoticeQuery, values, async (error) => {
           if (error) {
-            console.error('데이터 입력 실패', error);
-            reject(error);
-          } else {
-            console.log('학교 공지사항 입력 성공!');
+            console.log('학교 공지사항 입력 실패!');
             resolve();
+            return;
           }
+          console.log('학교 공지사항 입력 성공!');
+          resolve();
         });
       }),
     );
