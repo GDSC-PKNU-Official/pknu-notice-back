@@ -16,10 +16,10 @@ export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
         if (error) {
           await notificationToSlack(`DB에 학과 삽입 실패`);
           resolve();
-        } else {
-          console.log('단과대 입력 성공!');
-          resolve();
+          return;
         }
+        console.log('단과대 입력 성공!');
+        resolve();
       });
     });
   });
@@ -35,12 +35,11 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
   const values = [notice.title, notice.path, notice.description, notice.date];
 
   return new Promise((resolve) => {
-    db.query(saveNoticeQuery, values, async (error) => {
-      if (error) {
-        await notificationToSlack(`${major} DB에 공지사항 삽입 실패 `);
-        resolve();
+    db.query(saveNoticeQuery, values, (err) => {
+      if (err) {
+        console.log(`${major} 공지사항 입력 실패`);
       }
-      console.log(major + '공지사항 입력 성공!');
+      console.log(`${major} 공지사항 입력 성공`);
       resolve();
     });
   });
@@ -53,6 +52,7 @@ export const saveNoticeToDB = async (): Promise<void> => {
       if (error) {
         notificationToSlack(selectQuery + '실패');
         resolve([]);
+        return;
       }
       resolve(results as College[]);
     });
@@ -86,20 +86,20 @@ export const saveNoticeToDB = async (): Promise<void> => {
       db.query(pinnedNotiQuery, async (err, res) => {
         if (err) {
           await notificationToSlack(pinnedNotiQuery.split('ORDER')[0] + '에러');
-        } else {
-          const rows = res as RowDataPacket[];
-          if (Array.isArray(rows) && rows.length > 0) {
-            pinnedNotiLink = rows[0].link;
+          return;
+        }
+        const rows = res as RowDataPacket[];
+        if (Array.isArray(rows) && rows.length > 0) {
+          pinnedNotiLink = rows[0].link;
+        }
+        for (const notice of noticeLists.pinnedNotice) {
+          const result = await noticeContentCrawling(notice);
+          if (result.path === '') {
+            notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+            continue;
           }
-          for (const notice of noticeLists.pinnedNotice) {
-            const result = await noticeContentCrawling(notice);
-            if (result.path === '') {
-              notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
-              continue;
-            }
-            if (result.path === pinnedNotiLink) break;
-            savePromises.push(saveNotice(result, major + '고정'));
-          }
+          if (result.path === pinnedNotiLink) break;
+          savePromises.push(saveNotice(result, major + '고정'));
         }
       });
     }
@@ -109,22 +109,21 @@ export const saveNoticeToDB = async (): Promise<void> => {
     db.query(normalNotiQuery, async (err, res) => {
       if (err) {
         await notificationToSlack(normalNotiQuery.split('ORDER')[0] + '에러');
-      } else {
-        const rows = res as RowDataPacket[];
-        if (Array.isArray(rows) && rows.length > 0)
-          normalNotiLink = rows[0].link;
+        return;
+      }
+      const rows = res as RowDataPacket[];
+      if (Array.isArray(rows) && rows.length > 0) normalNotiLink = rows[0].link;
 
-        for (const notice of noticeLists.normalNotice) {
-          const result = await noticeContentCrawling(notice);
-          if (result.path === '') {
-            notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
-            continue;
-          }
-          if (result.path === normalNotiLink) {
-            break;
-          }
-          savePromises.push(saveNotice(result, major + '일반'));
+      for (const notice of noticeLists.normalNotice) {
+        const result = await noticeContentCrawling(notice);
+        if (result.path === '') {
+          notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+          continue;
         }
+        if (result.path === normalNotiLink) {
+          break;
+        }
+        savePromises.push(saveNotice(result, major + '일반'));
       }
     });
   }
@@ -142,6 +141,7 @@ const saveSchoolNotice = async (
       if (err) {
         await notificationToSlack(query.split('ORDER')[0]);
         resolve('');
+        return;
       }
       const rows = res as RowDataPacket[];
       if (Array.isArray(rows) && rows.length > 0) {
@@ -173,12 +173,12 @@ const saveSchoolNotice = async (
         ];
         db.query(saveNoticeQuery, values, async (error) => {
           if (error) {
-            await notificationToSlack('DB에 학교공지 삽입 실패');
+            console.log('학교 공지사항 입력 실패!');
             resolve();
-          } else {
-            console.log('학교 공지사항 입력 성공!');
-            resolve();
+            return;
           }
+          console.log('학교 공지사항 입력 성공!');
+          resolve();
         });
       }),
     );
