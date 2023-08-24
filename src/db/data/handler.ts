@@ -45,7 +45,7 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
   });
 };
 
-export const saveNoticeToDB = async (): Promise<void> => {
+export const saveNoticeToDB = async (): Promise<string[]> => {
   const selectQuery = 'SELECT * FROM departments;';
   const results = await new Promise<College[]>((resolve) => {
     db.query(selectQuery, (error, results) => {
@@ -59,6 +59,7 @@ export const saveNoticeToDB = async (): Promise<void> => {
   });
 
   const savePromises: Promise<void>[] = [];
+  const newNoticeMajor: string[] = [];
 
   for (const row of results) {
     const college: College = {
@@ -126,12 +127,14 @@ export const saveNoticeToDB = async (): Promise<void> => {
         if (result.path === normalNotiLink) {
           break;
         }
+        if (!newNoticeMajor.includes(major)) newNoticeMajor.push(major);
         savePromises.push(saveNotice(result, major + '일반'));
       }
     });
   }
 
   await Promise.all(savePromises);
+  return newNoticeMajor;
 };
 
 const saveSchoolNotice = async (
