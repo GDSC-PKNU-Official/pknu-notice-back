@@ -9,4 +9,5 @@ cron.schedule('0 2 * * *', async () => {
   const month = today.getMonth() + 1; // 월은 0부터 시작하므로 1을 더해줍니다.
   const day = today.getDate();
   notificationToSlack(`${year}-${month}-${day} 크롤링 완료`);
+  console.log(`${year}-${month}-${day} 크롤링 완료`);
 });
