@@ -85,7 +85,7 @@ export const pushNotification = (major: string) => {
           JSON.stringify(message),
         );
       }
-      notificationToSlack(`${major} 알림 ${res.length}명 알림 완료`);
+      notificationToSlack(`${major} ${res.length}명 알림 완료`);
     } catch (error) {
       console.error(error);
     }
