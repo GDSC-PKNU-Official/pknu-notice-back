@@ -1,4 +1,5 @@
 import db from '@db/index';
+import notificationToSlack from 'src/hooks/notificateToSlack';
 import webpush from 'web-push';
 
 interface UserPushInfo {
@@ -16,7 +17,7 @@ interface PushMessage {
   icon: string;
 }
 
-interface SubscribeUser {
+export interface SubscribeUser {
   user: string;
 }
 
@@ -71,17 +72,22 @@ export const pushNotification = (major: string) => {
   db.query(query, (err: Error, res: SubscribeUser[]) => {
     if (err) console.error(err);
 
-    const message: PushMessage = {
-      title: `${major} 알림`,
-      body: '새로운 공지가 추가됐어요',
-      icon: './icons/icon-192x192.png',
-    };
+    try {
+      const message: PushMessage = {
+        title: `${major} 알림`,
+        body: '새로운 공지가 추가됐어요',
+        icon: './icons/icon-192x192.png',
+      };
 
-    for (const userInfo of res) {
-      webpush.sendNotification(
-        JSON.parse(userInfo.user),
-        JSON.stringify(message),
-      );
+      for (const userInfo of res) {
+        webpush.sendNotification(
+          JSON.parse(userInfo.user),
+          JSON.stringify(message),
+        );
+      }
+      notificationToSlack(`${major} 알림 ${res.length}명 알림 완료`);
+    } catch (error) {
+      console.error(error);
     }
   });
 };
