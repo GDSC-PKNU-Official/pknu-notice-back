@@ -29,10 +29,8 @@ export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
 
 const saveNotice = (notice: Notice, major: string): Promise<void> => {
   const saveNoticeQuery =
-    'INSERT INTO ' +
-    major +
-    ' (title, link, content, uploadDate) VALUES (?, ?, ?, ?)';
-  const values = [notice.title, notice.path, notice.description, notice.date];
+    'INSERT INTO ' + major + ' (title, link, uploadDate) VALUES (?, ?, ?)';
+  const values = [notice.title, notice.path, notice.date];
 
   return new Promise((resolve) => {
     db.query(saveNoticeQuery, values, (err) => {
@@ -152,7 +150,7 @@ const saveSchoolNotice = async (
     });
   });
 
-  const saveNoticeQuery = `INSERT INTO 학교${mode} (title, link, content, uploadDate) VALUES (?, ?, ?, ?);`;
+  const saveNoticeQuery = `INSERT INTO 학교${mode} (title, link, uploadDate) VALUES (?, ?, ?);`;
   const savePromises: Promise<void>[] = [];
 
   for (const list of notices) {
@@ -165,12 +163,7 @@ const saveSchoolNotice = async (
 
     savePromises.push(
       new Promise<void>((resolve) => {
-        const values = [
-          notice.title,
-          notice.path,
-          notice.description,
-          notice.date,
-        ];
+        const values = [notice.title, notice.path, notice.date];
         db.query(saveNoticeQuery, values, async (error) => {
           if (error) {
             console.log('학교 공지사항 입력 실패!');
