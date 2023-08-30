@@ -1,8 +1,18 @@
+import { pushNotification } from '@apis/subscribe/service';
 import { saveNoticeToDB, saveSchoolNoticeToDB } from '@db/data/handler';
 import cron from 'node-cron';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
-cron.schedule('0 2 * * *', async () => {
+const pushToUsers = async (majors: string[]) => {
+  return new Promise<void>((resolve) => {
+    for (const major of majors) {
+      pushNotification(major);
+    }
+  });
+};
+
+cron.schedule('0 10 * * *', async () => {
+  const majors = await saveNoticeToDB();
   await saveNoticeToDB();
   await saveSchoolNoticeToDB();
   const today = new Date();
@@ -11,4 +21,5 @@ cron.schedule('0 2 * * *', async () => {
   const day = today.getDate();
   notificationToSlack(`${year}-${month}-${day} 크롤링 완료`);
   console.log(`${year}-${month}-${day} 크롤링 완료`);
+  pushToUsers(majors);
 });
