@@ -46,7 +46,6 @@ const createNoticeTable = (college: College[]) => {
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 title VARCHAR(255) NOT NULL,
                 link VARCHAR(255) NOT NULL UNIQUE,
-                content TEXT NOT NULL,
                 uploadDate VARCHAR(255) NOT NULL
             );`;
 
@@ -90,7 +89,6 @@ const createSchoolNoticeTable = () => {
       id INT PRIMARY KEY AUTO_INCREMENT,
       title VARCHAR(255) NOT NULL,
       link VARCHAR(255) NOT NULL UNIQUE,
-      content TEXT NOT NULL,
       uploadDate VARCHAR(255) NOT NULL
           );`;
 
