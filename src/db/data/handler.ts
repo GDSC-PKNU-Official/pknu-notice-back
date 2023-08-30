@@ -68,7 +68,10 @@ export const saveNoticeToDB = async (): Promise<void> => {
 
     const noticeLink = await noticeCrawling(college);
     const noticeLists = await noticeListCrawling(noticeLink);
-    if (noticeLists.normalNotice.length === 0) {
+    if (
+      noticeLists.normalNotice.length === 0 &&
+      noticeLists.pinnedNotice.length === 0
+    ) {
       notificationToSlack(`${noticeLink} 크롤링 실패`);
       continue;
     }
