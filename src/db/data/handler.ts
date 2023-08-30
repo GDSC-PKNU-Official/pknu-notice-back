@@ -29,10 +29,8 @@ export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
 
 const saveNotice = (notice: Notice, major: string): Promise<void> => {
   const saveNoticeQuery =
-    'INSERT INTO ' +
-    major +
-    ' (title, link, content, uploadDate) VALUES (?, ?, ?, ?)';
-  const values = [notice.title, notice.path, notice.description, notice.date];
+    'INSERT INTO ' + major + ' (title, link, uploadDate) VALUES (?, ?, ?)';
+  const values = [notice.title, notice.path, notice.date];
 
   return new Promise((resolve) => {
     db.query(saveNoticeQuery, values, (err) => {
@@ -45,7 +43,7 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
   });
 };
 
-export const saveNoticeToDB = async (): Promise<void> => {
+export const saveNoticeToDB = async (): Promise<string[]> => {
   const selectQuery = 'SELECT * FROM departments;';
   const results = await new Promise<College[]>((resolve) => {
     db.query(selectQuery, (error, results) => {
@@ -59,6 +57,7 @@ export const saveNoticeToDB = async (): Promise<void> => {
   });
 
   const savePromises: Promise<void>[] = [];
+  const newNoticeMajor: string[] = [];
 
   for (const row of results) {
     const college: College = {
@@ -70,7 +69,10 @@ export const saveNoticeToDB = async (): Promise<void> => {
 
     const noticeLink = await noticeCrawling(college);
     const noticeLists = await noticeListCrawling(noticeLink);
-    if (noticeLists.normalNotice.length === 0) {
+    if (
+      noticeLists.normalNotice.length === 0 &&
+      noticeLists.pinnedNotice.length === 0
+    ) {
       notificationToSlack(`${noticeLink} 크롤링 실패`);
       continue;
     }
@@ -123,12 +125,14 @@ export const saveNoticeToDB = async (): Promise<void> => {
         if (result.path === normalNotiLink) {
           break;
         }
+        if (!newNoticeMajor.includes(major)) newNoticeMajor.push(major);
         savePromises.push(saveNotice(result, major + '일반'));
       }
     });
   }
 
   await Promise.all(savePromises);
+  return newNoticeMajor;
 };
 
 const saveSchoolNotice = async (
@@ -152,7 +156,7 @@ const saveSchoolNotice = async (
     });
   });
 
-  const saveNoticeQuery = `INSERT INTO 학교${mode} (title, link, content, uploadDate) VALUES (?, ?, ?, ?);`;
+  const saveNoticeQuery = `INSERT INTO 학교${mode} (title, link, uploadDate) VALUES (?, ?, ?);`;
   const savePromises: Promise<void>[] = [];
 
   for (const list of notices) {
@@ -165,12 +169,7 @@ const saveSchoolNotice = async (
 
     savePromises.push(
       new Promise<void>((resolve) => {
-        const values = [
-          notice.title,
-          notice.path,
-          notice.description,
-          notice.date,
-        ];
+        const values = [notice.title, notice.path, notice.date];
         db.query(saveNoticeQuery, values, async (error) => {
           if (error) {
             console.log('학교 공지사항 입력 실패!');

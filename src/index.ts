@@ -14,11 +14,12 @@ import { initialCrawling } from 'src/hooks/startCrawlingData';
 import './hooks/cronNoticeCrawling';
 
 const app = express();
-app.use(morgan('dev'));
 app.use(cors(corsOptions));
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 app.use(express.json());
 app.use(errorHandler);
+
+if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
 initialCrawling();
 
