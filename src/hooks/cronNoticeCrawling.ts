@@ -11,7 +11,7 @@ const pushToUsers = async (majors: string[]) => {
   });
 };
 
-cron.schedule('0 10 * * *', async () => {
+cron.schedule('0 3 * * *', async () => {
   const majors = await saveNoticeToDB();
   await saveNoticeToDB();
   await saveSchoolNoticeToDB();
