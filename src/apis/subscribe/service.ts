@@ -67,27 +67,29 @@ export const unsubscribeMajor = async (
   });
 };
 
-export const pushNotification = (major: string) => {
+export const pushNotification = (major: string): Promise<number> => {
   const query = `SELECT user FROM ${major}구독`;
-  db.query(query, (err: Error, res: SubscribeUser[]) => {
-    if (err) console.error(err);
+  return new Promise<number>((resolve) => {
+    db.query(query, async (err: Error, res: SubscribeUser[]) => {
+      if (err) console.error(err);
 
-    try {
-      const message: PushMessage = {
-        title: `${major} 알림`,
-        body: '새로운 공지가 추가됐어요',
-        icon: './icons/icon-192x192.png',
-      };
+      try {
+        const message: PushMessage = {
+          title: `${major} 알림`,
+          body: '새로운 공지가 추가됐어요',
+          icon: './icons/icon-192x192.png',
+        };
 
-      for (const userInfo of res) {
-        webpush.sendNotification(
-          JSON.parse(userInfo.user),
-          JSON.stringify(message),
-        );
+        for (const userInfo of res) {
+          await webpush.sendNotification(
+            JSON.parse(userInfo.user),
+            JSON.stringify(message),
+          );
+        }
+        resolve(res.length);
+      } catch (error) {
+        console.error(error);
       }
-      notificationToSlack(`${major} ${res.length}명 알림 완료`);
-    } catch (error) {
-      console.error(error);
-    }
+    });
   });
 };

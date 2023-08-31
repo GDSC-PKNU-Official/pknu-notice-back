@@ -4,11 +4,12 @@ import cron from 'node-cron';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
 const pushToUsers = async (majors: string[]) => {
-  return new Promise<void>((resolve) => {
-    for (const major of majors) {
-      pushNotification(major);
-    }
-  });
+  let pushedUserCount = ``;
+  for (const major of majors) {
+    const count = await pushNotification(major);
+    pushedUserCount += `${major} ${count}명 알림 완료\n`;
+  }
+  notificationToSlack(pushedUserCount);
 };
 
 cron.schedule('0 3 * * *', async () => {
