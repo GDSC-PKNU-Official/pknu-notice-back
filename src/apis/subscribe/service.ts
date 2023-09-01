@@ -88,7 +88,8 @@ export const pushNotification = (major: string): Promise<number> => {
         }
         resolve(res.length);
       } catch (error) {
-        console.error(error);
+        notificationToSlack(error);
+        resolve(0);
       }
     });
   });
