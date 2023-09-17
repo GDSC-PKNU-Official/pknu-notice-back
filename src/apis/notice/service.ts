@@ -1,5 +1,7 @@
+import { WhalebeData } from '@crawling/whalebeCrawling';
 import db from '@db/index';
 import { Notice } from 'src/@types/college';
+import notificationToSlack from 'src/hooks/notificateToSlack';
 
 interface SeparateNoti {
   고정: Notice[];
@@ -41,4 +43,14 @@ export const getSchoolNotices = async (): Promise<SeparateNoti> => {
     일반: [...normalNotices],
   };
   return notices;
+};
+
+export const getWhalebe = async (): Promise<WhalebeData[]> => {
+  const query = 'SELECT * FROM 웨일비;';
+  return new Promise<WhalebeData[]>((resolve) => {
+    db.query(query, (err, res) => {
+      if (err) notificationToSlack('웨일비 조회 실패');
+      resolve(res as WhalebeData[]);
+    });
+  });
 };

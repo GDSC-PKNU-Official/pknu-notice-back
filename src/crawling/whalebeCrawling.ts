@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-interface WhalebeData {
+export interface WhalebeData {
   title: string;
   date: string;
   imgUrl: string;
