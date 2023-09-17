@@ -4,6 +4,7 @@ import {
   saveDepartmentToDB,
   saveNoticeToDB,
   saveSchoolNoticeToDB,
+  saveWhalebeToDB,
 } from '@db/data/handler';
 import db from '@db/index';
 import createNoticeTable from '@db/table/createTables';
@@ -22,6 +23,7 @@ export const initialCrawling = () => {
         await saveDepartmentToDB(collegeList);
         await saveGraduationRequirementToDB();
         await saveSchoolNoticeToDB();
+        await saveWhalebeToDB();
         await saveNoticeToDB();
       }
     });
