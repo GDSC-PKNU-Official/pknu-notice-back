@@ -1,5 +1,9 @@
 import { pushNotification } from '@apis/subscribe/service';
-import { saveNoticeToDB, saveSchoolNoticeToDB } from '@db/data/handler';
+import {
+  saveNoticeToDB,
+  saveSchoolNoticeToDB,
+  saveWhalebeToDB,
+} from '@db/data/handler';
 import cron from 'node-cron';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
@@ -16,6 +20,7 @@ cron.schedule('0 3 * * *', async () => {
   const majors = await saveNoticeToDB();
   await saveNoticeToDB();
   await saveSchoolNoticeToDB();
+  await saveWhalebeToDB();
   const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth() + 1; // 월은 0부터 시작하므로 1을 더해줍니다.
