@@ -3,6 +3,7 @@ import {
   noticeCrawling,
   noticeListCrawling,
 } from '@crawling/noticeCrawling';
+import { whalebeCrawling } from '@crawling/whalebeCrawling';
 import { RowDataPacket } from 'mysql2';
 import { College, Notice } from 'src/@types/college';
 import db from 'src/db';
@@ -204,4 +205,21 @@ export const saveSchoolNoticeToDB = async (): Promise<void> => {
   savePromises.push(...normalNoticePromises);
 
   await Promise.all(savePromises);
+};
+
+export const saveWhalebeToDB = async (): Promise<void> => {
+  const query = 'INSERT INTO 웨일비 (title, date, imgUrl) VALUES (?, ?, ?)';
+  const whalebeDatas = await whalebeCrawling();
+
+  const promises = whalebeDatas.map((data) => {
+    const values = [data.title, data.date, data.imgUrl];
+
+    return new Promise<void>((resolve) => {
+      db.query(query, values, () => {
+        resolve();
+      });
+    });
+  });
+
+  Promise.all(promises);
 };

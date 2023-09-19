@@ -102,8 +102,26 @@ const createSchoolNoticeTable = () => {
   }
 };
 
+const createWhalebeDataTable = () => {
+  const createTableQuery = `CREATE TABLE 웨일비 (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL UNIQUE,
+    date VARCHAR(255) NOT NULL,
+    imgUrl VARCHAR(255) NOT NULL
+        );`;
+
+  db.query(createTableQuery, (error) => {
+    if (error) {
+      console.log('웨일비 DB 생성 실패', error);
+      return;
+    }
+    console.log('웨일비 테이블 생성 성공!');
+  });
+};
+
 const createAllTables = (college: College[]) => {
   createDepartmentTable();
+  createWhalebeDataTable();
   createGraduationTable();
   createSchoolNoticeTable();
   createNoticeTable(college);
