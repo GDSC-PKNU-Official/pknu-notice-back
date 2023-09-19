@@ -60,8 +60,8 @@ const forDeployedServer = () => {
       return;
     }
     console.log('웨일비 테이블 생성 성공!');
-    saveWhalebeToDB();
   });
 };
 
-forDeployedServer();
+saveWhalebeToDB();
+// forDeployedServer();
