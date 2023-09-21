@@ -16,7 +16,7 @@ const pushToUsers = async (majors: string[]) => {
   notificationToSlack(pushedUserCount);
 };
 
-cron.schedule('0 3 * * *', async () => {
+cron.schedule('0 0-9 * * *', async () => {
   const majors = await saveNoticeToDB();
   await saveNoticeToDB();
   await saveSchoolNoticeToDB();
