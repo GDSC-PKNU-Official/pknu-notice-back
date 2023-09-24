@@ -50,7 +50,16 @@ export const getWhalebe = async (): Promise<WhalebeData[]> => {
   return new Promise<WhalebeData[]>((resolve) => {
     db.query(query, (err, res) => {
       if (err) notificationToSlack('웨일비 조회 실패');
-      resolve(res as WhalebeData[]);
+      const whalebeData = res as WhalebeData[];
+      const today = new Date();
+      const todayString = `${today.getFullYear()}-${String(
+        today.getMonth() + 1,
+      ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      const filteredData = whalebeData
+        .filter((data) => data.date >= todayString)
+        .slice(0, 7);
+      resolve(filteredData);
     });
   });
 };
