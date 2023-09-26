@@ -87,6 +87,12 @@ export const pushNotification = (major: string): Promise<number> => {
           );
         } catch (error) {
           notificationToSlack(error);
+          const deleteQuery = `DELETE FROM ${major}구독 WHERE user = ?`;
+          db.query(deleteQuery, [userInfo.user], (deleteErr) => {
+            if (deleteErr)
+              notificationToSlack('알림 보낼 수 없는 토큰 삭제 실패');
+            else console.log('알림 보낼 수 없는 토큰 삭제');
+          });
         }
         resolve(res.length);
 
