@@ -73,22 +73,29 @@ export const pushNotification = (major: string): Promise<number> => {
     db.query(query, async (err: Error, res: SubscribeUser[]) => {
       if (err) console.error(err);
 
-      try {
-        const message: PushMessage = {
-          title: `${major} 알림`,
-          body: '새로운 공지가 추가됐어요',
-          icon: './icons/icon-192x192.png',
-        };
+      const message: PushMessage = {
+        title: `${major} 알림`,
+        body: '새로운 공지가 추가됐어요',
+        icon: './icons/icon-192x192.png',
+      };
 
-        for (const userInfo of res) {
+      for (const userInfo of res) {
+        try {
           await webpush.sendNotification(
             JSON.parse(userInfo.user),
             JSON.stringify(message),
           );
+        } catch (error) {
+          notificationToSlack(error);
+          const deleteQuery = `DELETE FROM ${major}구독 WHERE user = ?`;
+          db.query(deleteQuery, [userInfo.user], (deleteErr) => {
+            if (deleteErr)
+              notificationToSlack('알림 보낼 수 없는 토큰 삭제 실패');
+            else console.log('알림 보낼 수 없는 토큰 삭제');
+          });
         }
         resolve(res.length);
-      } catch (error) {
-        notificationToSlack(error);
+
         resolve(0);
       }
     });
