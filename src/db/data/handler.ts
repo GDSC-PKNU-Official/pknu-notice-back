@@ -37,6 +37,8 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
     db.query(saveNoticeQuery, values, (err) => {
       if (err) {
         console.log(`${major} 공지사항 입력 실패`);
+        resolve();
+        return;
       }
       console.log(`${major} 공지사항 입력 성공`);
       resolve();
@@ -84,38 +86,43 @@ export const saveNoticeToDB = async (): Promise<string[]> => {
         : college.departmentSubName;
 
     if (noticeLists.pinnedNotice !== undefined) {
-      const pinnedNotiQuery = `SELECT link FROM ${major}고정 ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC LIMIT 1;`;
-      let pinnedNotiLink = '';
+      const pinnedNotiQuery = `SELECT link FROM ${major}고정;`;
       db.query(pinnedNotiQuery, async (err, res) => {
         if (err) {
           await notificationToSlack(pinnedNotiQuery.split('ORDER')[0] + '에러');
           return;
         }
         const rows = res as RowDataPacket[];
-        if (Array.isArray(rows) && rows.length > 0) {
-          pinnedNotiLink = rows[0].link;
-        }
+        let pinnedNotiLink: string[] = [];
+
+        if (Array.isArray(rows) && rows.length > 0)
+          pinnedNotiLink = rows.map((row) => row.link);
+
         for (const notice of noticeLists.pinnedNotice) {
           const result = await noticeContentCrawling(notice);
           if (result.path === '') {
             notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
             continue;
           }
-          if (result.path === pinnedNotiLink) break;
-          savePromises.push(saveNotice(result, major + '고정'));
+          if (!pinnedNotiLink.includes(result.path)) {
+            if (!newNoticeMajor.includes(major)) newNoticeMajor.push(major);
+            savePromises.push(saveNotice(result, major + '고정'));
+          }
         }
       });
     }
 
-    const normalNotiQuery = `SELECT link FROM ${major}일반 ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC LIMIT 1;`;
-    let normalNotiLink = '';
+    const normalNotiQuery = `SELECT link FROM ${major}일반;`;
     db.query(normalNotiQuery, async (err, res) => {
       if (err) {
         await notificationToSlack(normalNotiQuery.split('ORDER')[0] + '에러');
         return;
       }
+
       const rows = res as RowDataPacket[];
-      if (Array.isArray(rows) && rows.length > 0) normalNotiLink = rows[0].link;
+      let normalNotiLink: string[] = [];
+      if (Array.isArray(rows) && rows.length > 0)
+        normalNotiLink = rows.map((row) => row.link);
 
       for (const notice of noticeLists.normalNotice) {
         const result = await noticeContentCrawling(notice);
@@ -123,11 +130,11 @@ export const saveNoticeToDB = async (): Promise<string[]> => {
           notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
           continue;
         }
-        if (result.path === normalNotiLink) {
-          break;
+
+        if (!normalNotiLink.includes(result.path)) {
+          if (!newNoticeMajor.includes(major)) newNoticeMajor.push(major);
+          savePromises.push(saveNotice(result, major + '일반'));
         }
-        if (!newNoticeMajor.includes(major)) newNoticeMajor.push(major);
-        savePromises.push(saveNotice(result, major + '일반'));
       }
     });
   }

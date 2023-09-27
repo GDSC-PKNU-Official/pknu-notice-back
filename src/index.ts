@@ -63,5 +63,5 @@ const forDeployedServer = () => {
   });
 };
 
-saveWhalebeToDB();
+// saveWhalebeToDB();
 // forDeployedServer();
