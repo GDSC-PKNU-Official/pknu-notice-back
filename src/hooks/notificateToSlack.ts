@@ -6,12 +6,16 @@ const notificationToSlack = async (text: string): Promise<void> => {
     console.error(text);
     return;
   }
-  await axios.post(env.SLACK_WEBHOOK_URL, {
-    Headers: {
-      'Content-type': 'application/json',
-    },
-    text,
-  });
+  try {
+    await axios.post(env.SLACK_WEBHOOK_URL, {
+      Headers: {
+        'Content-type': 'application/json',
+      },
+      text,
+    });
+  } catch (error) {
+    console.error(error);
+  }
   return;
 };
 

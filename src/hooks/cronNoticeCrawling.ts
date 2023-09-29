@@ -13,7 +13,7 @@ const pushToUsers = async (majors: string[]) => {
     const count = await pushNotification(major);
     pushedUserCount += `${major} ${count}명 알림 완료\n`;
   }
-  notificationToSlack(pushedUserCount);
+  if (pushedUserCount.length !== 0) notificationToSlack(pushedUserCount);
 };
 
 cron.schedule('0 0-9 * * 1-5', async () => {
