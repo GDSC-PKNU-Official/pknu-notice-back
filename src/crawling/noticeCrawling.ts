@@ -50,6 +50,7 @@ export const noticeCrawling = async (college: College): Promise<string> => {
 
 export const noticeListCrawling = async (
   link: string,
+  inputHostLink?: string,
 ): Promise<NoticeLists> => {
   const response = await axios.get(link);
   const hostLink =
@@ -77,7 +78,8 @@ export const noticeListCrawling = async (
     const anchorElement = $(element).find('a');
     let tmpLink = anchorElement.attr('href');
 
-    if (tmpLink[0] === '?') tmpLink = link + tmpLink;
+    if (inputHostLink) tmpLink = inputHostLink + tmpLink;
+    else if (tmpLink[0] === '?') tmpLink = link + tmpLink;
     else if (tmpLink[0] === '/') tmpLink = hostLink + tmpLink;
 
     const findDate = $(element)
