@@ -3,7 +3,7 @@ import {
   saveNoticeToDB,
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
-} from '@db/data/handler';
+} from '@db/data/noticeHandler';
 import cron from 'node-cron';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 

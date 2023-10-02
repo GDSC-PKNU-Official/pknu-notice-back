@@ -5,7 +5,7 @@ import {
   saveNoticeToDB,
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
-} from '@db/data/handler';
+} from '@db/data/noticeHandler';
 import db from '@db/index';
 import createNoticeTable from '@db/table/createTables';
 import { RowDataPacket } from 'mysql2';
