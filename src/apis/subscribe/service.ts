@@ -76,6 +76,10 @@ export const pushNotification = (
     db.query(query, async (err: Error, res: SubscribeUser[]) => {
       if (err) console.error(err);
 
+      if (res.length === 0) {
+        resolve(0);
+        return;
+      }
       for (const userInfo of res) {
         for (const lists of noticeTitle) {
           try {
@@ -99,8 +103,6 @@ export const pushNotification = (
           }
         }
         resolve(res.length);
-
-        resolve(0);
       }
     });
   });
