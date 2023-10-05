@@ -9,6 +9,10 @@ import { College, Notice } from 'src/@types/college';
 import db from 'src/db';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
+export interface PushNoti {
+  [key: string]: string[];
+}
+
 export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
   const saveCollegePromises = college.map((data) => {
     const saveCollegeQuery = `INSERT INTO departments (collegeName, departmentName, departmentSubName, departmentLink) VALUES ('${data.collegeName}', '${data.departmentName}', '${data.departmentSubName}', '${data.departmentLink}');`;
@@ -46,7 +50,7 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
   });
 };
 
-export const saveNoticeToDB = async (): Promise<string[]> => {
+export const saveNoticeToDB = async (): Promise<PushNoti> => {
   const selectQuery = 'SELECT * FROM departments;';
   const results = await new Promise<College[]>((resolve) => {
     db.query(selectQuery, (error, results) => {
@@ -60,7 +64,7 @@ export const saveNoticeToDB = async (): Promise<string[]> => {
   });
 
   const savePromises: Promise<void>[] = [];
-  const newNoticeMajor: string[] = [];
+  const newNoticeMajor: PushNoti = {};
 
   for (const row of results) {
     const college: College = {
@@ -105,7 +109,6 @@ export const saveNoticeToDB = async (): Promise<string[]> => {
             continue;
           }
           if (!pinnedNotiLink.includes(result.path)) {
-            if (!newNoticeMajor.includes(major)) newNoticeMajor.push(major);
             savePromises.push(saveNotice(result, major + '고정'));
           }
         }
@@ -132,7 +135,9 @@ export const saveNoticeToDB = async (): Promise<string[]> => {
         }
 
         if (!normalNotiLink.includes(result.path)) {
-          if (!newNoticeMajor.includes(major)) newNoticeMajor.push(major);
+          if (!newNoticeMajor[major]) newNoticeMajor[major] = [];
+
+          newNoticeMajor[major].push(result.title);
           savePromises.push(saveNotice(result, major + '일반'));
         }
       }
