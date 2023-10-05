@@ -119,9 +119,27 @@ const createWhalebeDataTable = () => {
   });
 };
 
+const createLanguageDataTable = () => {
+  const createTableQuery = `CREATE TABLE 어학공지 (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    link VARCHAR(255) NOT NULL UNIQUE,
+    uploadDate VARCHAR(255) NOT NULL
+        );`;
+
+  db.query(createTableQuery, (error) => {
+    if (error) {
+      console.log('어학 DB 생성 실패', error);
+      return;
+    }
+    console.log('어학 테이블 생성 성공!');
+  });
+};
+
 const createAllTables = (college: College[]) => {
   createDepartmentTable();
   createWhalebeDataTable();
+  createLanguageDataTable();
   createGraduationTable();
   createSchoolNoticeTable();
   createNoticeTable(college);
