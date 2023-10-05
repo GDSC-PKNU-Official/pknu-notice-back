@@ -63,3 +63,18 @@ export const getWhalebe = async (): Promise<WhalebeData[]> => {
     });
   });
 };
+
+export const getLanguage = async (): Promise<Notice[]> => {
+  const query = 'SELECT * FROM 어학공지;';
+  return new Promise<Notice[]>((resolve) => {
+    db.query(query, (err, res) => {
+      if (err) {
+        notificationToSlack('어학 공지 응답 실패');
+        resolve([]);
+        return;
+      }
+      const languageNoti = res as Notice[];
+      resolve(languageNoti);
+    });
+  });
+};
