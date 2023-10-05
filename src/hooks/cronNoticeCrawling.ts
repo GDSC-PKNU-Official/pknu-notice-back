@@ -1,4 +1,5 @@
 import { pushNotification } from '@apis/subscribe/service';
+import { saveLanguageNoticeToDB } from '@db/data/languageHandler';
 import {
   saveNoticeToDB,
   saveSchoolNoticeToDB,
@@ -20,6 +21,7 @@ cron.schedule('0 0-9 * * 1-5', async () => {
   const majors = await saveNoticeToDB();
   await saveNoticeToDB();
   await saveSchoolNoticeToDB();
+  await saveLanguageNoticeToDB();
   await saveWhalebeToDB();
   const today = new Date();
   const year = today.getFullYear();
