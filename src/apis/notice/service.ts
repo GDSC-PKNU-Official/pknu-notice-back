@@ -65,7 +65,7 @@ export const getWhalebe = async (): Promise<WhalebeData[]> => {
 };
 
 export const getLanguage = async (): Promise<Notice[]> => {
-  const query = 'SELECT * FROM 어학공지;';
+  const query = `SELECT * FROM 어학공지 ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC;`;
   return new Promise<Notice[]>((resolve) => {
     db.query(query, (err, res) => {
       if (err) {
