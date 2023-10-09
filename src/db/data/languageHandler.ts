@@ -27,11 +27,11 @@ const saveNotice = (notice: Notice): Promise<void> => {
 
 export const saveLanguageNoticeToDB = async () => {
   const languageNotiLists1 = await noticeListCrawling(
-    PKNU_URL.LANGUAGE_NOTICE1,
+    PKNU_URL.LANGUAGE_NOTICE_EXCHANGE_STUDENT,
     'https://www.pknu.ac.kr/main/163',
   );
   const languageNotiLists2 = await noticeListCrawling(
-    PKNU_URL.LANGUAGE_NOTICE2,
+    PKNU_URL.LANGUAGE_NOTICE_LANGUAGE_TRANING,
     'https://www.pknu.ac.kr/main/163',
   );
 
