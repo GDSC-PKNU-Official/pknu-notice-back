@@ -1,6 +1,7 @@
 import { pushNotification } from '@apis/subscribe/service';
 import { saveLanguageNoticeToDB } from '@db/data/languageHandler';
 import {
+  PushNoti,
   saveNoticeToDB,
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
@@ -8,18 +9,17 @@ import {
 import cron from 'node-cron';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
-const pushToUsers = async (majors: string[]) => {
+const pushToUsers = async (pushNotiToUserLists: PushNoti) => {
   let pushedUserCount = ``;
-  for (const major of majors) {
-    const count = await pushNotification(major);
-    pushedUserCount += `${major} ${count}명 알림 완료\n`;
+  for (const key in pushNotiToUserLists) {
+    const count = await pushNotification(key, pushNotiToUserLists[key]);
+    pushedUserCount += `${key} ${count}명 알림 완료\n`;
   }
   if (pushedUserCount.length !== 0) notificationToSlack(pushedUserCount);
 };
 
 cron.schedule('0 0-9 * * 1-5', async () => {
-  const majors = await saveNoticeToDB();
-  await saveNoticeToDB();
+  const pushNotiToUserLists = await saveNoticeToDB();
   await saveSchoolNoticeToDB();
   await saveLanguageNoticeToDB();
   await saveWhalebeToDB();
@@ -29,5 +29,5 @@ cron.schedule('0 0-9 * * 1-5', async () => {
   const day = today.getDate();
   notificationToSlack(`${year}-${month}-${day} 크롤링 완료`);
   console.log(`${year}-${month}-${day} 크롤링 완료`);
-  pushToUsers(majors);
+  pushToUsers(pushNotiToUserLists);
 });
