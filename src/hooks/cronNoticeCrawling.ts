@@ -1,10 +1,11 @@
 import { pushNotification } from '@apis/subscribe/service';
+import { saveLanguageNoticeToDB } from '@db/data/languageHandler';
 import {
   PushNoti,
   saveNoticeToDB,
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
-} from '@db/data/handler';
+} from '@db/data/noticeHandler';
 import cron from 'node-cron';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
@@ -20,6 +21,7 @@ const pushToUsers = async (pushNotiToUserLists: PushNoti) => {
 cron.schedule('0 0-9 * * 1-5', async () => {
   const pushNotiToUserLists = await saveNoticeToDB();
   await saveSchoolNoticeToDB();
+  await saveLanguageNoticeToDB();
   await saveWhalebeToDB();
   const today = new Date();
   const year = today.getFullYear();

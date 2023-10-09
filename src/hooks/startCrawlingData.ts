@@ -1,11 +1,12 @@
 import { collegeCrawling } from '@crawling/collegeCrawling';
 import { saveGraduationRequirementToDB } from '@db/data/graduation';
+import { saveLanguageNoticeToDB } from '@db/data/languageHandler';
 import {
   saveDepartmentToDB,
   saveNoticeToDB,
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
-} from '@db/data/handler';
+} from '@db/data/noticeHandler';
 import db from '@db/index';
 import createNoticeTable from '@db/table/createTables';
 import { RowDataPacket } from 'mysql2';
@@ -21,6 +22,7 @@ export const initialCrawling = () => {
         const collegeList = await collegeCrawling();
         createNoticeTable(collegeList);
         await saveDepartmentToDB(collegeList);
+        await saveLanguageNoticeToDB();
         await saveGraduationRequirementToDB();
         await saveSchoolNoticeToDB();
         await saveWhalebeToDB();
