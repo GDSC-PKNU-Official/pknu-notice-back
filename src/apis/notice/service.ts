@@ -52,9 +52,9 @@ export const getWhalebe = async (): Promise<WhalebeData[]> => {
       if (err) notificationToSlack('웨일비 조회 실패');
       const whalebeData = res as WhalebeData[];
       const today = new Date();
-      const todayString = `${today.getFullYear()}-${String(
+      const todayString = `${today.getFullYear()}.${String(
         today.getMonth() + 1,
-      ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      ).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
 
       const filteredData = whalebeData
         .filter((data) => data.date >= todayString)
