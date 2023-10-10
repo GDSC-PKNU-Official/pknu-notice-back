@@ -57,6 +57,7 @@ export const unsubscribeMajor = async (
         if (error) {
           console.error('구독취소 실패');
           reject(false);
+          return;
         }
         console.log('구독취소 성공');
         resolve(true);
@@ -74,7 +75,10 @@ export const pushNotification = (
   const query = `SELECT user FROM ${major}구독`;
   return new Promise<number>((resolve) => {
     db.query(query, async (err: Error, res: SubscribeUser[]) => {
-      if (err) console.error(err);
+      if (err) {
+        console.error(err);
+        return;
+      }
 
       if (res.length === 0) {
         resolve(0);
