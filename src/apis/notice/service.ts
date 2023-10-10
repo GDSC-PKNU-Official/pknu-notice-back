@@ -52,14 +52,29 @@ export const getWhalebe = async (): Promise<WhalebeData[]> => {
       if (err) notificationToSlack('웨일비 조회 실패');
       const whalebeData = res as WhalebeData[];
       const today = new Date();
-      const todayString = `${today.getFullYear()}-${String(
+      const todayString = `${today.getFullYear()}.${String(
         today.getMonth() + 1,
-      ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      ).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
 
       const filteredData = whalebeData
         .filter((data) => data.date >= todayString)
         .slice(0, 7);
       resolve(filteredData);
+    });
+  });
+};
+
+export const getLanguage = async (): Promise<Notice[]> => {
+  const query = `SELECT * FROM 어학공지 ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC;`;
+  return new Promise<Notice[]>((resolve) => {
+    db.query(query, (err, res) => {
+      if (err) {
+        notificationToSlack('어학 공지 응답 실패');
+        resolve([]);
+        return;
+      }
+      const languageNoti = res as Notice[];
+      resolve(languageNoti);
     });
   });
 };

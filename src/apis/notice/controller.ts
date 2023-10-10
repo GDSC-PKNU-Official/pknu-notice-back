@@ -1,4 +1,9 @@
-import { getNotices, getSchoolNotices, getWhalebe } from '@apis/notice/service';
+import {
+  getLanguage,
+  getNotices,
+  getSchoolNotices,
+  getWhalebe,
+} from '@apis/notice/service';
 import express, { Request, Response } from 'express';
 
 const router = express.Router();
@@ -21,6 +26,15 @@ router.get('/whalebe', async (req: Request, res: Response) => {
   try {
     const whalebeData = await getWhalebe();
     res.json(whalebeData);
+  } catch (err) {
+    res.json();
+  }
+});
+
+router.get('/language', async (req: Request, res: Response) => {
+  try {
+    const languageNoti = await getLanguage();
+    res.json(languageNoti);
   } catch (err) {
     res.json();
   }
