@@ -50,6 +50,15 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
   });
 };
 
+const deleteNotice = (major: string, noticeLinks: string[], mode: string) => {
+  const deleteQuery = `DELETE FROM ${major}${mode} WHERE link = ?`;
+  for (const link of noticeLinks) {
+    db.query(deleteQuery, [link], (err) => {
+      if (err) notificationToSlack(`${major}${mode} 공지사항 삭제 실패`);
+    });
+  }
+};
+
 export const saveNoticeToDB = async (): Promise<PushNoti> => {
   const selectQuery = 'SELECT * FROM departments;';
   const results = await new Promise<College[]>((resolve) => {
@@ -97,6 +106,7 @@ export const saveNoticeToDB = async (): Promise<PushNoti> => {
           return;
         }
         const rows = res as RowDataPacket[];
+        const deleteNotiLinks: string[] = [];
         let pinnedNotiLink: string[] = [];
 
         if (Array.isArray(rows) && rows.length > 0)
@@ -112,6 +122,13 @@ export const saveNoticeToDB = async (): Promise<PushNoti> => {
             savePromises.push(saveNotice(result, major + '고정'));
           }
         }
+
+        for (const noticeLink of pinnedNotiLink) {
+          if (!noticeLists.pinnedNotice.includes(noticeLink)) {
+            deleteNotiLinks.push(noticeLink);
+          }
+        }
+        deleteNotice(major, deleteNotiLinks, '고정');
       });
     }
 
