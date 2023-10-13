@@ -107,7 +107,8 @@ const createWhalebeDataTable = () => {
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL UNIQUE,
     date VARCHAR(255) NOT NULL,
-    imgUrl VARCHAR(255) NOT NULL
+    imgUrl VARCHAR(255) NOT NULL,
+    link VARCHAR(255) NOT NULL
         );`;
 
   db.query(createTableQuery, (error) => {
