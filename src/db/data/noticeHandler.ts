@@ -50,6 +50,15 @@ const saveNotice = (notice: Notice, major: string): Promise<void> => {
   });
 };
 
+const deleteNotice = (major: string, noticeLinks: string[], mode: string) => {
+  const deleteQuery = `DELETE FROM ${major}${mode} WHERE link = ?`;
+  for (const link of noticeLinks) {
+    db.query(deleteQuery, [link], (err) => {
+      if (err) notificationToSlack(`${major}${mode} 공지사항 삭제 실패`);
+    });
+  }
+};
+
 export const saveNoticeToDB = async (): Promise<PushNoti> => {
   const selectQuery = 'SELECT * FROM departments;';
   const results = await new Promise<College[]>((resolve) => {
@@ -97,6 +106,7 @@ export const saveNoticeToDB = async (): Promise<PushNoti> => {
           return;
         }
         const rows = res as RowDataPacket[];
+        const deleteNotiLinks: string[] = [];
         let pinnedNotiLink: string[] = [];
 
         if (Array.isArray(rows) && rows.length > 0)
@@ -112,6 +122,13 @@ export const saveNoticeToDB = async (): Promise<PushNoti> => {
             savePromises.push(saveNotice(result, major + '고정'));
           }
         }
+
+        for (const noticeLink of pinnedNotiLink) {
+          if (!noticeLists.pinnedNotice.includes(noticeLink)) {
+            deleteNotiLinks.push(noticeLink);
+          }
+        }
+        deleteNotice(major, deleteNotiLinks, '고정');
       });
     }
 
@@ -219,11 +236,12 @@ export const saveSchoolNoticeToDB = async (): Promise<void> => {
 };
 
 export const saveWhalebeToDB = async (): Promise<void> => {
-  const query = 'INSERT INTO 웨일비 (title, date, imgUrl) VALUES (?, ?, ?)';
+  const query =
+    'INSERT INTO 웨일비 (title, date, imgUrl, link) VALUES (?, ?, ?, ?)';
   const whalebeDatas = await whalebeCrawling();
 
   const promises = whalebeDatas.map((data) => {
-    const values = [data.title, data.date, data.imgUrl];
+    const values = [data.title, data.date, data.imgUrl, data.link];
 
     return new Promise<void>((resolve) => {
       db.query(query, values, () => {
