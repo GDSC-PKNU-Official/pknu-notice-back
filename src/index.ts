@@ -85,4 +85,4 @@ const handleDeployToServer = async () => {
   });
 };
 
-handleDeployToServer();
+// handleDeployToServer();

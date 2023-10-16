@@ -74,6 +74,14 @@ export const noticeListCrawling = async (
   const pinnedNotice: string[] = [];
   const normalNotice: string[] = [];
 
+  if (link === 'http://geoinfo.pknu.ac.kr/05piazza/08.php') {
+    const noticePage2Link =
+      'http://geoinfo.pknu.ac.kr/05piazza/08.php?p=2&key=&keyword=&bbscode=cate0501&reCategory=';
+    const noticePage2Lists = await noticeListCrawling(noticePage2Link, link);
+    pinnedNotice.push(...noticePage2Lists.pinnedNotice);
+    normalNotice.push(...noticePage2Lists.normalNotice);
+  }
+
   tableData.each((index, element) => {
     const anchorElement = $(element).find('a');
     let tmpLink = anchorElement.attr('href');
@@ -86,7 +94,7 @@ export const noticeListCrawling = async (
       .text()
       .match(/\d{4}[-.]\d{2}[-.]\d{2}/);
 
-    if (link === 'http://geoinfo.pknu.ac.kr/05piazza/08.php') {
+    if (link.startsWith('http://geoinfo.pknu.ac.kr/05piazza/08.php')) {
       // 공간정보시스템공학과
       if ($(element).find('td').first().text().trim() === '공지')
         pinnedNotice.push(tmpLink);
