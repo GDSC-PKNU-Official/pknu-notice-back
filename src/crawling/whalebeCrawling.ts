@@ -5,7 +5,17 @@ export interface WhalebeData {
   title: string;
   date: string;
   imgUrl: string;
+  link: string;
 }
+
+const sliceURL = (link: string): string => {
+  if (link.startsWith('location.href=')) {
+    link = link.slice(15);
+    link = link.slice(0, -2);
+  }
+
+  return link;
+};
 
 export const whalebeCrawling = async (): Promise<WhalebeData[]> => {
   const hostname = 'https://whalebe.pknu.ac.kr';
@@ -20,7 +30,8 @@ export const whalebeCrawling = async (): Promise<WhalebeData[]> => {
 
   programs.each((_, element) => {
     const imgUrl = hostname + $(element).find('img').attr('src');
-    const title = $(element).find('.card-title').text();
+    const link = hostname + sliceURL($(element).find('div').attr('onclick'));
+    const title = $(element).find('.card-title').text().trim();
     const date = $(element)
       .find('.app_date')
       .find('.col-12')
@@ -32,6 +43,7 @@ export const whalebeCrawling = async (): Promise<WhalebeData[]> => {
       title,
       date,
       imgUrl,
+      link,
     };
     whalebeData.push(tmpData);
   });

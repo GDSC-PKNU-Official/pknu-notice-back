@@ -236,11 +236,12 @@ export const saveSchoolNoticeToDB = async (): Promise<void> => {
 };
 
 export const saveWhalebeToDB = async (): Promise<void> => {
-  const query = 'INSERT INTO 웨일비 (title, date, imgUrl) VALUES (?, ?, ?)';
+  const query =
+    'INSERT INTO 웨일비 (title, date, imgUrl, link) VALUES (?, ?, ?, ?)';
   const whalebeDatas = await whalebeCrawling();
 
   const promises = whalebeDatas.map((data) => {
-    const values = [data.title, data.date, data.imgUrl];
+    const values = [data.title, data.date, data.imgUrl, data.link];
 
     return new Promise<void>((resolve) => {
       db.query(query, values, () => {
