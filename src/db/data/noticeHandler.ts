@@ -10,7 +10,7 @@ import db from 'src/db';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
 export interface PushNoti {
-  [key: string]: string[];
+  [key: number]: string[];
 }
 
 interface NotiLink {
@@ -36,109 +36,77 @@ export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
   await Promise.all(saveCollegePromises);
 };
 
-const saveNotice = async (notice: Notice, major: string): Promise<void> => {
+const saveMajorNotice = async (
+  notice: Notice,
+  departmentId: number,
+  isPinned: boolean,
+): Promise<void> => {
   const saveNoticeQuery =
-    'INSERT INTO ' + major + ' (title, link, uploadDate) VALUES (?, ?, ?)';
-  const values = [notice.title, notice.path, notice.date];
+    'INSERT INTO major_notices (title, link, upload_date, rep_yn, department_id) VALUES (?, ?, ?, ?, ?)';
+  const values = [
+    notice.title,
+    notice.path,
+    notice.date,
+    departmentId,
+    isPinned,
+  ];
 
   try {
     await db.execute(saveNoticeQuery, values);
-    console.log(`${major} 공지사항 입력 성공`);
+    console.log(`공지사항 입력 성공`);
   } catch (err) {
-    console.log(`${major} 공지사항 입력 실패`);
-  }
-};
-
-const deleteNotice = (major: string, noticeLinks: string[], mode: string) => {
-  const deleteQuery = `DELETE FROM ${major}${mode} WHERE link = ?`;
-  for (const link of noticeLinks) {
-    db.execute(deleteQuery, [link]);
+    console.log(`공지사항 입력 실패`);
   }
 };
 
 export const saveNoticeToDB = async (): Promise<PushNoti> => {
   const query = 'SELECT * FROM departments;';
-  const results = await selectQuery<College[]>(query);
+  const colleges = await selectQuery<College[]>(query);
 
-  // if (error) {
-  //   notificationToSlack(selectQuery + '실패');
-  //   resolve([]);
-  //   return;
-  // }
+  const getNotiLinkQuery = `SELECT link FROM major_notices;`;
+  const noticeLinksInDB = (await selectQuery<NotiLink[]>(getNotiLinkQuery)).map(
+    (noticeLink) => noticeLink.link,
+  );
 
   const savePromises: Promise<void>[] = [];
   const newNoticeMajor: PushNoti = {};
 
-  for (const row of results) {
-    const college: College = {
-      collegeName: row.collegeName,
-      departmentName: row.departmentName,
-      departmentSubName: row.departmentSubName,
-      departmentLink: row.departmentLink,
-    };
-
+  for (const college of colleges) {
     const noticeLink = await noticeCrawling(college);
     const noticeLists = await noticeListCrawling(noticeLink);
-    if (
-      noticeLists.normalNotice.length === 0 &&
-      noticeLists.pinnedNotice.length === 0
-    ) {
+
+    const normalNotices = noticeLists.normalNotice;
+    const pinnedNotices = noticeLists.pinnedNotice;
+
+    if (normalNotices.length + pinnedNotices.length === 0) {
       notificationToSlack(`${noticeLink} 크롤링 실패`);
       continue;
     }
 
-    const major =
-      college.departmentSubName === '-'
-        ? college.departmentName
-        : college.departmentSubName;
-
-    if (noticeLists.pinnedNotice !== undefined) {
-      const pinnedNotiQuery = `SELECT link FROM ${major}고정;`;
-      const rows = await selectQuery<NotiLink[]>(pinnedNotiQuery);
-
-      const deleteNotiLinks: string[] = [];
-      let pinnedNotiLink: string[] = [];
-
-      if (Array.isArray(rows) && rows.length > 0)
-        pinnedNotiLink = rows.map((row) => row.link);
-
-      for (const notice of noticeLists.pinnedNotice) {
-        const result = await noticeContentCrawling(notice);
-        if (result.path === '') {
-          notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
-          continue;
-        }
-
-        if (!pinnedNotiLink.includes(result.path)) {
-          savePromises.push(saveNotice(result, major + '고정'));
-        }
-      }
-
-      for (const noticeLink of pinnedNotiLink) {
-        if (!noticeLists.pinnedNotice.includes(noticeLink)) {
-          deleteNotiLinks.push(noticeLink);
-        }
-      }
-      deleteNotice(major, deleteNotiLinks, '고정');
-    }
-
-    const normalNotiQuery = `SELECT link FROM ${major}일반;`;
-    const rows = await selectQuery<NotiLink[]>(normalNotiQuery);
-    let normalNotiLink: string[] = [];
-    if (Array.isArray(rows) && rows.length > 0)
-      normalNotiLink = rows.map((row) => row.link);
-
-    for (const notice of noticeLists.normalNotice) {
+    for (const notice of pinnedNotices) {
       const result = await noticeContentCrawling(notice);
       if (result.path === '') {
         notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
         continue;
       }
 
-      if (!normalNotiLink.includes(result.path)) {
-        if (!newNoticeMajor[major]) newNoticeMajor[major] = [];
-        newNoticeMajor[major].push(result.title);
-        savePromises.push(saveNotice(result, major + '일반'));
+      if (!noticeLinksInDB.includes(result.path))
+        savePromises.push(saveMajorNotice(result, college.id, true));
+
+      // TODO: 고정 공지사항에서 제거된 경우 rep_yn => false 로 변경하는 로직 추가 필요
+    }
+
+    for (const notice of normalNotices) {
+      const result = await noticeContentCrawling(notice);
+      if (result.path === '') {
+        notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+        continue;
+      }
+
+      if (!noticeLinksInDB.includes(result.path)) {
+        if (!newNoticeMajor[college.id]) newNoticeMajor[college.id] = [];
+        newNoticeMajor[college.id].push(result.title);
+        savePromises.push(saveMajorNotice(result, college.id, false));
       }
     }
   }
