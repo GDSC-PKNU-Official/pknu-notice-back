@@ -2,7 +2,7 @@ import { pushNotification } from '@apis/subscribe/service';
 import { saveLanguageNoticeToDB } from '@db/data/languageHandler';
 import {
   PushNoti,
-  saveNoticeToDB,
+  saveMajorNoticeToDB,
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
 } from '@db/data/noticeHandler';
@@ -19,7 +19,7 @@ const pushToUsers = async (pushNotiToUserLists: PushNoti) => {
 };
 
 cron.schedule('0 0-9 * * 1-5', async () => {
-  const pushNotiToUserLists = await saveNoticeToDB();
+  const pushNotiToUserLists = await saveMajorNoticeToDB();
   await saveSchoolNoticeToDB();
   await saveLanguageNoticeToDB();
   await saveWhalebeToDB();

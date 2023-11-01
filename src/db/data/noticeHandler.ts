@@ -59,7 +59,7 @@ const saveMajorNotice = async (
   }
 };
 
-export const saveNoticeToDB = async (): Promise<PushNoti> => {
+export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
   const query = 'SELECT * FROM departments;';
   const colleges = await selectQuery<College[]>(query);
 
@@ -115,14 +115,14 @@ export const saveNoticeToDB = async (): Promise<PushNoti> => {
   return newNoticeMajor;
 };
 
-const saveSchoolNotice = async (
+const saveNotice = async (
   notices: string[],
   mode: string,
 ): Promise<Promise<void>[]> => {
-  const query = `SELECT link FROM 학교${mode} ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC LIMIT 1;`;
+  const query = `SELECT link FROM notices WHERE category = SCHOOL`;
   const res = await selectQuery<NotiLink>(query);
 
-  const saveNoticeQuery = `INSERT INTO 학교${mode} (title, link, uploadDate) VALUES (?, ?, ?);`;
+  const saveNoticeQuery = `INSERT INTO notices (title, link, upload_date, author, rep_yn, category) VALUES (?, ?, ?, ?, ?, ?);`;
   const savePromises: Promise<void>[] = [];
 
   for (const list of notices) {
@@ -157,13 +157,13 @@ export const saveSchoolNoticeToDB = async (): Promise<void> => {
   const pknuNoticeLink = 'https://www.pknu.ac.kr/main/163';
   const noticeLists = await noticeListCrawling(pknuNoticeLink);
   if (noticeLists.pinnedNotice !== undefined) {
-    const pinnedNoticePromises = await saveSchoolNotice(
+    const pinnedNoticePromises = await saveNotice(
       noticeLists.pinnedNotice,
       '고정',
     );
     savePromises.push(...pinnedNoticePromises);
   }
-  const normalNoticePromises = await saveSchoolNotice(
+  const normalNoticePromises = await saveNotice(
     noticeLists.normalNotice,
     '일반',
   );
