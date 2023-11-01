@@ -5,7 +5,7 @@ import {
 } from '@crawling/noticeCrawling';
 import { whalebeCrawling } from '@crawling/whalebeCrawling';
 import { selectQuery } from '@db/query/dbQueryHandler';
-import { College, Notice } from 'src/@types/college';
+import { College, Notice, NoticeCategory } from 'src/@types/college';
 import db from 'src/db';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
@@ -116,60 +116,50 @@ export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
 };
 
 const saveNotice = async (
-  notices: string[],
-  mode: string,
-): Promise<Promise<void>[]> => {
-  const query = `SELECT link FROM notices WHERE category = SCHOOL`;
-  const res = await selectQuery<NotiLink>(query);
-
+  notice: Notice,
+  isPinned: boolean,
+  category: NoticeCategory,
+): Promise<void> => {
   const saveNoticeQuery = `INSERT INTO notices (title, link, upload_date, author, rep_yn, category) VALUES (?, ?, ?, ?, ?, ?);`;
-  const savePromises: Promise<void>[] = [];
+  const values = [
+    notice.title,
+    notice.path,
+    notice.date,
+    notice.author,
+    isPinned,
+    category,
+  ];
 
-  for (const list of notices) {
-    const notice = await noticeContentCrawling(list);
-    if (notice.path === '') {
-      notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
-      continue;
-    }
-    if (res.link === notice.path) break;
-
-    // savePromises.push(
-    //   new Promise<void>((resolve) => {
-    //     const values = [notice.title, notice.path, notice.date];
-    //     db.query(saveNoticeQuery, values, async (error) => {
-    //       if (error) {
-    //         console.log('학교 공지사항 입력 실패!');
-    //         resolve();
-    //         return;
-    //       }
-    //       console.log('학교 공지사항 입력 성공!');
-    //       resolve();
-    //     });
-    //   }),
-    // );
-  }
-
-  return savePromises;
+  await db.execute(saveNoticeQuery, values);
 };
 
 export const saveSchoolNoticeToDB = async (): Promise<void> => {
-  const savePromises: Promise<void>[] = [];
+  const query = `SELECT link FROM notices WHERE category = SCHOOL;`;
+  const schoolNoticeLinksInDB = (await selectQuery<NotiLink[]>(query)).map(
+    (schoolNotiLink) => schoolNotiLink.link,
+  );
+
+  // const savePromises: Promise<void>[] = [];
   const pknuNoticeLink = 'https://www.pknu.ac.kr/main/163';
   const noticeLists = await noticeListCrawling(pknuNoticeLink);
-  if (noticeLists.pinnedNotice !== undefined) {
-    const pinnedNoticePromises = await saveNotice(
-      noticeLists.pinnedNotice,
-      '고정',
-    );
-    savePromises.push(...pinnedNoticePromises);
-  }
-  const normalNoticePromises = await saveNotice(
-    noticeLists.normalNotice,
-    '일반',
-  );
-  savePromises.push(...normalNoticePromises);
+  const pinnedNotices = noticeLists.pinnedNotice;
+  const normalNotices = noticeLists.normalNotice;
 
-  await Promise.all(savePromises);
+  for (const noticeLink of pinnedNotices) {
+    if (schoolNoticeLinksInDB.includes(noticeLink)) continue;
+
+    const notice = await noticeContentCrawling(noticeLink);
+    saveNotice(notice, true, 'SCHOOL');
+  }
+
+  for (const noticeLink of normalNotices) {
+    if (schoolNoticeLinksInDB.includes(noticeLink)) continue;
+
+    const notice = await noticeContentCrawling(noticeLink);
+    saveNotice(notice, false, 'SCHOOL');
+  }
+
+  // await Promise.all(savePromises);
 };
 
 export const saveWhalebeToDB = async (): Promise<void> => {
