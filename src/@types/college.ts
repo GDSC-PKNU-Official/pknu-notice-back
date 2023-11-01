@@ -17,8 +17,14 @@ export interface MajorNotices {
 }
 
 export interface Notice {
+  id?: number;
   title: string;
   path: string;
+  author?: string;
+  rep_yn?: boolean;
   description: string;
   date: string;
+  category?: NoticeCategory;
 }
+
+export type NoticeCategory = 'SCHOOL' | 'LANGUAGE';
