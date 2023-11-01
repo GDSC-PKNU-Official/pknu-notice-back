@@ -3,6 +3,7 @@ export interface College {
   departmentName: string;
   departmentSubName: string;
   departmentLink: string;
+  graduationLink?: string;
 }
 
 export interface Notice {
