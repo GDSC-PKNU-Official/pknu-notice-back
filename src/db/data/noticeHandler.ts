@@ -4,13 +4,17 @@ import {
   noticeListCrawling,
 } from '@crawling/noticeCrawling';
 import { whalebeCrawling } from '@crawling/whalebeCrawling';
-import { RowDataPacket } from 'mysql2';
+import { selectQuery } from '@db/query/dbQueryHandler';
 import { College, Notice } from 'src/@types/college';
 import db from 'src/db';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
 export interface PushNoti {
   [key: string]: string[];
+}
+
+interface NotiLink {
+  link: string;
 }
 
 export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
@@ -32,45 +36,35 @@ export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
   await Promise.all(saveCollegePromises);
 };
 
-const saveNotice = (notice: Notice, major: string): Promise<void> => {
+const saveNotice = async (notice: Notice, major: string): Promise<void> => {
   const saveNoticeQuery =
     'INSERT INTO ' + major + ' (title, link, uploadDate) VALUES (?, ?, ?)';
   const values = [notice.title, notice.path, notice.date];
 
-  return new Promise((resolve) => {
-    db.query(saveNoticeQuery, values, (err) => {
-      if (err) {
-        console.log(`${major} 공지사항 입력 실패`);
-        resolve();
-        return;
-      }
-      console.log(`${major} 공지사항 입력 성공`);
-      resolve();
-    });
-  });
+  try {
+    await db.execute(saveNoticeQuery, values);
+    console.log(`${major} 공지사항 입력 성공`);
+  } catch (err) {
+    console.log(`${major} 공지사항 입력 실패`);
+  }
 };
 
 const deleteNotice = (major: string, noticeLinks: string[], mode: string) => {
   const deleteQuery = `DELETE FROM ${major}${mode} WHERE link = ?`;
   for (const link of noticeLinks) {
-    db.query(deleteQuery, [link], (err) => {
-      if (err) notificationToSlack(`${major}${mode} 공지사항 삭제 실패`);
-    });
+    db.execute(deleteQuery, [link]);
   }
 };
 
 export const saveNoticeToDB = async (): Promise<PushNoti> => {
-  const selectQuery = 'SELECT * FROM departments;';
-  const results = await new Promise<College[]>((resolve) => {
-    db.query(selectQuery, (error, results) => {
-      if (error) {
-        notificationToSlack(selectQuery + '실패');
-        resolve([]);
-        return;
-      }
-      resolve(results as College[]);
-    });
-  });
+  const query = 'SELECT * FROM departments;';
+  const results = await selectQuery<College[]>(query);
+
+  // if (error) {
+  //   notificationToSlack(selectQuery + '실패');
+  //   resolve([]);
+  //   return;
+  // }
 
   const savePromises: Promise<void>[] = [];
   const newNoticeMajor: PushNoti = {};
@@ -100,64 +94,53 @@ export const saveNoticeToDB = async (): Promise<PushNoti> => {
 
     if (noticeLists.pinnedNotice !== undefined) {
       const pinnedNotiQuery = `SELECT link FROM ${major}고정;`;
-      db.query(pinnedNotiQuery, async (err, res) => {
-        if (err) {
-          await notificationToSlack(pinnedNotiQuery.split('ORDER')[0] + '에러');
-          return;
-        }
-        const rows = res as RowDataPacket[];
-        const deleteNotiLinks: string[] = [];
-        let pinnedNotiLink: string[] = [];
+      const rows = await selectQuery<NotiLink[]>(pinnedNotiQuery);
 
-        if (Array.isArray(rows) && rows.length > 0)
-          pinnedNotiLink = rows.map((row) => row.link);
+      const deleteNotiLinks: string[] = [];
+      let pinnedNotiLink: string[] = [];
 
-        for (const notice of noticeLists.pinnedNotice) {
-          const result = await noticeContentCrawling(notice);
-          if (result.path === '') {
-            notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
-            continue;
-          }
-          if (!pinnedNotiLink.includes(result.path)) {
-            savePromises.push(saveNotice(result, major + '고정'));
-          }
-        }
-
-        for (const noticeLink of pinnedNotiLink) {
-          if (!noticeLists.pinnedNotice.includes(noticeLink)) {
-            deleteNotiLinks.push(noticeLink);
-          }
-        }
-        deleteNotice(major, deleteNotiLinks, '고정');
-      });
-    }
-
-    const normalNotiQuery = `SELECT link FROM ${major}일반;`;
-    db.query(normalNotiQuery, async (err, res) => {
-      if (err) {
-        await notificationToSlack(normalNotiQuery.split('ORDER')[0] + '에러');
-        return;
-      }
-
-      const rows = res as RowDataPacket[];
-      let normalNotiLink: string[] = [];
       if (Array.isArray(rows) && rows.length > 0)
-        normalNotiLink = rows.map((row) => row.link);
+        pinnedNotiLink = rows.map((row) => row.link);
 
-      for (const notice of noticeLists.normalNotice) {
+      for (const notice of noticeLists.pinnedNotice) {
         const result = await noticeContentCrawling(notice);
         if (result.path === '') {
           notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
           continue;
         }
 
-        if (!normalNotiLink.includes(result.path)) {
-          if (!newNoticeMajor[major]) newNoticeMajor[major] = [];
-          newNoticeMajor[major].push(result.title);
-          savePromises.push(saveNotice(result, major + '일반'));
+        if (!pinnedNotiLink.includes(result.path)) {
+          savePromises.push(saveNotice(result, major + '고정'));
         }
       }
-    });
+
+      for (const noticeLink of pinnedNotiLink) {
+        if (!noticeLists.pinnedNotice.includes(noticeLink)) {
+          deleteNotiLinks.push(noticeLink);
+        }
+      }
+      deleteNotice(major, deleteNotiLinks, '고정');
+    }
+
+    const normalNotiQuery = `SELECT link FROM ${major}일반;`;
+    const rows = await selectQuery<NotiLink[]>(normalNotiQuery);
+    let normalNotiLink: string[] = [];
+    if (Array.isArray(rows) && rows.length > 0)
+      normalNotiLink = rows.map((row) => row.link);
+
+    for (const notice of noticeLists.normalNotice) {
+      const result = await noticeContentCrawling(notice);
+      if (result.path === '') {
+        notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+        continue;
+      }
+
+      if (!normalNotiLink.includes(result.path)) {
+        if (!newNoticeMajor[major]) newNoticeMajor[major] = [];
+        newNoticeMajor[major].push(result.title);
+        savePromises.push(saveNotice(result, major + '일반'));
+      }
+    }
   }
 
   await Promise.all(savePromises);
@@ -169,21 +152,7 @@ const saveSchoolNotice = async (
   mode: string,
 ): Promise<Promise<void>[]> => {
   const query = `SELECT link FROM 학교${mode} ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC LIMIT 1;`;
-  const res = await new Promise<string>((resolve) => {
-    db.query(query, async (err, res) => {
-      if (err) {
-        await notificationToSlack(query.split('ORDER')[0]);
-        resolve('');
-        return;
-      }
-      const rows = res as RowDataPacket[];
-      if (Array.isArray(rows) && rows.length > 0) {
-        const link = rows[0].link;
-        resolve(link);
-      }
-      resolve('');
-    });
-  });
+  const res = await selectQuery<NotiLink>(query);
 
   const saveNoticeQuery = `INSERT INTO 학교${mode} (title, link, uploadDate) VALUES (?, ?, ?);`;
   const savePromises: Promise<void>[] = [];
@@ -194,22 +163,22 @@ const saveSchoolNotice = async (
       notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
       continue;
     }
-    if (res === notice.path) break;
+    if (res.link === notice.path) break;
 
-    savePromises.push(
-      new Promise<void>((resolve) => {
-        const values = [notice.title, notice.path, notice.date];
-        db.query(saveNoticeQuery, values, async (error) => {
-          if (error) {
-            console.log('학교 공지사항 입력 실패!');
-            resolve();
-            return;
-          }
-          console.log('학교 공지사항 입력 성공!');
-          resolve();
-        });
-      }),
-    );
+    // savePromises.push(
+    //   new Promise<void>((resolve) => {
+    //     const values = [notice.title, notice.path, notice.date];
+    //     db.query(saveNoticeQuery, values, async (error) => {
+    //       if (error) {
+    //         console.log('학교 공지사항 입력 실패!');
+    //         resolve();
+    //         return;
+    //       }
+    //       console.log('학교 공지사항 입력 성공!');
+    //       resolve();
+    //     });
+    //   }),
+    // );
   }
 
   return savePromises;
@@ -243,11 +212,7 @@ export const saveWhalebeToDB = async (): Promise<void> => {
   const promises = whalebeDatas.map((data) => {
     const values = [data.title, data.date, data.imgUrl, data.link];
 
-    return new Promise<void>((resolve) => {
-      db.query(query, values, () => {
-        resolve();
-      });
-    });
+    return db.execute(query, values);
   });
 
   Promise.all(promises);
