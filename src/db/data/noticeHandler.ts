@@ -164,7 +164,7 @@ export const saveSchoolNoticeToDB = async (): Promise<void> => {
 
 export const saveWhalebeToDB = async (): Promise<void> => {
   const query =
-    'INSERT INTO 웨일비 (title, date, imgUrl, link) VALUES (?, ?, ?, ?)';
+    'INSERT INTO whalebe (title, date, imgUrl, link) VALUES (?, ?, ?, ?)';
   const whalebeDatas = await whalebeCrawling();
 
   const promises = whalebeDatas.map((data) => {
