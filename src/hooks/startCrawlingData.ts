@@ -18,14 +18,14 @@ export const initialCrawling = async () => {
     if (rows.length > 0) return;
 
     const collegeList = await collegeCrawling();
-    createNoticeTable();
+    await createNoticeTable();
     await saveDepartmentToDB(collegeList);
     await saveLanguageNoticeToDB();
-    await saveGraduationRequirementToDB();
+    // await saveGraduationRequirementToDB();
     await saveSchoolNoticeToDB();
     await saveWhalebeToDB();
     await saveMajorNoticeToDB();
   } catch (err) {
-    console.log(err);
+    console.log(err + '최종 에러 캐치');
   }
 };
