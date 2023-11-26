@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { College } from 'src/@types/college';
-import { Notice } from 'src/@types/college';
+import { Notices } from 'src/@types/college';
 
 interface NoticeLists {
   pinnedNotice?: string[];
@@ -20,7 +20,7 @@ const findNoticeLink = (
 
   targetElements.each((index, element) => {
     const link = $(element).attr('href');
-    if (college.departmentName === '유아교육과' && flag) {
+    if (college.department_name === '유아교육과' && flag) {
       noticeLink = '/education/1553';
       flag = false;
     } else if (link !== undefined && link !== '#none' && flag) {
@@ -34,11 +34,11 @@ const findNoticeLink = (
 
 export const noticeCrawling = async (college: College): Promise<string> => {
   let protocol = 'https://';
-  if (college.departmentSubName === '의공학전공') {
+  if (college.department_subname === '의공학전공') {
     protocol = 'http://';
-  } else if (college.departmentSubName === '공간정보시스템공학전공')
+  } else if (college.department_subname === '공간정보시스템공학전공')
     return 'http://geoinfo.pknu.ac.kr/05piazza/08.php';
-  const response = await axios.get(college.departmentLink);
+  const response = await axios.get(college.department_link);
   const hostLink = protocol + response.request._redirectable._options.hostname;
   const $ = cheerio.load(response.data);
   const noticeLink = hostLink + findNoticeLink('공지사항', college, $);
@@ -140,20 +140,20 @@ export const noticeListCrawling = async (
   }
 };
 
-export const noticeContentCrawling = async (link: string): Promise<Notice> => {
+export const noticeContentCrawling = async (link: string): Promise<Notices> => {
   const response = await axios.get(link);
   const $ = cheerio.load(response.data);
 
   const contentData = $('div#board_view');
   if (contentData.length > 0) {
     const title = contentData.find('h3').first().text().trim();
-    const date = contentData.find('p.writer strong').text().trim();
+    const upload_date = contentData.find('p.writer strong').text().trim();
     const description = contentData
       .find('div.board_stance')
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
@@ -162,34 +162,40 @@ export const noticeContentCrawling = async (link: string): Promise<Notice> => {
     const title = contentData2.find('h2#bo_v_title').text().trim();
     const text = contentData2.find('strong.if_date').text().trim();
     const dateMatch = text.match(/(\d{2}-\d{2}-\d{2})/);
-    const date = dateMatch ? dateMatch[1] : null;
+    const upload_date = dateMatch ? dateMatch[1] : null;
     const description = contentData2
       .find('div#bo_v_con')
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
   const tables = $('table.a_brdList, table.c_brdView');
   if (tables.length > 0) {
     const title = tables.find('tr').eq(0).text().trim();
-    const date = tables.find('tr').eq(1).find('td').first().text().trim();
+    const upload_date = tables
+      .find('tr')
+      .eq(1)
+      .find('td')
+      .first()
+      .text()
+      .trim();
     const description = tables
       .find('tr')
       .eq(3)
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
   const writeTable = $('table.write');
   if (writeTable.length > 0) {
     const title = writeTable.find('tr').first().find('td').text().trim();
-    const date = writeTable
+    const upload_date = writeTable
       .find('tr')
       .eq(2)
       .find('td')
@@ -202,21 +208,21 @@ export const noticeContentCrawling = async (link: string): Promise<Notice> => {
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
   const boardBoxTable = $('div#board_box table');
   if (boardBoxTable.length > 0) {
     const title = boardBoxTable.find('tr p').first().text().trim();
-    const date = boardBoxTable.find('tr span').eq(1).text().trim();
+    const upload_date = boardBoxTable.find('tr span').eq(1).text().trim();
     const description = boardBoxTable
       .find('tr')
       .eq(2)
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
@@ -229,7 +235,7 @@ export const noticeContentCrawling = async (link: string): Promise<Notice> => {
       .first()
       .text()
       .trim();
-    const date = bdContTable
+    const upload_date = bdContTable
       .find('tbody')
       .first()
       .find('tr')
@@ -239,9 +245,9 @@ export const noticeContentCrawling = async (link: string): Promise<Notice> => {
       .text()
       .trim();
     const description = bdContTable.find('div.bdvTxt_wrap').text().trim();
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
-  return { title: '', path: '', date: '', description: '' };
+  return { title: '', link: '', upload_date: '', description: '' };
 };

@@ -1,4 +1,8 @@
-import { subscribeMajor, unsubscribeMajor } from '@apis/subscribe/service';
+import {
+  pushNotification,
+  subscribeMajor,
+  unsubscribeMajor,
+} from '@apis/subscribe/service';
 import express, { Request, Response } from 'express';
 
 const router = express.Router();
@@ -15,8 +19,8 @@ router.post('/major', async (req: Request, res: Response) => {
 
 router.delete('/major', async (req: Request, res: Response) => {
   try {
-    const { subscription, major } = req.body;
-    await unsubscribeMajor(subscription, major);
+    const { subscription } = req.body;
+    await unsubscribeMajor(subscription);
   } catch (error) {
     console.error(error);
   } finally {
@@ -27,7 +31,7 @@ router.delete('/major', async (req: Request, res: Response) => {
 // router.post('/push', async (req: Request, res: Response) => {
 //   try {
 //     const { major } = req.body.data;
-//     pushNotification(major);
+//     pushNotification(major, ['안녕', '내 이름은', '곱등이']);
 //   } catch (error) {
 //     console.error(error);
 //   } finally {
