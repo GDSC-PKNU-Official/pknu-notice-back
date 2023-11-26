@@ -19,6 +19,7 @@ const pushToUsers = async (pushNotiToUserLists: PushNoti) => {
 };
 
 cron.schedule('0 0-9 * * 1-5', async () => {
+  notificationToSlack('크롤링 동작 시작!');
   const pushNotiToUserLists = await saveMajorNoticeToDB();
   await saveSchoolNoticeToDB();
   await saveLanguageNoticeToDB();
