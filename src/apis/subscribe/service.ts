@@ -1,6 +1,9 @@
 import db from '@db/index';
+import { selectQuery } from '@db/query/dbQueryHandler';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 import webpush from 'web-push';
+
+import { getDepartmentIdByMajor } from './../../utils/majorUtils';
 
 interface UserPushInfo {
   endpoint: string;
@@ -25,89 +28,60 @@ export const subscribeMajor = async (
   subscription: UserPushInfo,
   major: string,
 ) => {
-  return new Promise<boolean>((resolve, reject) => {
-    try {
-      const subscribeMajorQuery =
-        'INSERT INTO ' + major + '구독 (user) VALUES (?)';
+  const majorId = await getDepartmentIdByMajor(major);
+  const subscribeMajorQuery =
+    'INSERT INTO subscribe_users (user, department_id) VALUES (?, ?)';
+  const values = [JSON.stringify(subscription), majorId];
 
-      db.query(subscribeMajorQuery, [JSON.stringify(subscription)], (error) => {
-        if (error) {
-          console.error('구독 실패');
-          reject(false);
-        } else {
-          console.log('구독 성공');
-          resolve(true);
-        }
-      });
-    } catch (error) {
-      console.error(error);
-      reject(false);
-    }
-  });
+  try {
+    await db.execute(subscribeMajorQuery, values);
+  } catch (error) {
+    notificationToSlack(error.message + '구독 실패');
+  }
 };
 
-export const unsubscribeMajor = async (
-  subscription: UserPushInfo,
-  major: string,
-) => {
-  return new Promise<boolean>((resolve, reject) => {
-    try {
-      const unSubscribeMajorQuery = `DELETE FROM ${major}구독 WHERE user like '%${subscription.endpoint}%'`;
-      db.query(unSubscribeMajorQuery, (error, res) => {
-        if (error) {
-          console.error('구독취소 실패');
-          reject(false);
-          return;
-        }
-        console.log('구독취소 성공');
-        resolve(true);
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  });
+export const unsubscribeMajor = async (subscription: UserPushInfo) => {
+  try {
+    const unSubscribeMajorQuery = `DELETE FROM subscribe_users WHERE user like '%${subscription.endpoint}%'`;
+    await db.execute(unSubscribeMajorQuery);
+  } catch (error) {
+    notificationToSlack(error.message + '구독 취소 실패');
+  }
 };
 
-export const pushNotification = (
-  major: string,
+export const pushNotification = async (
+  majorId: string,
   noticeTitle: string[],
 ): Promise<number> => {
-  const query = `SELECT user FROM ${major}구독`;
-  return new Promise<number>((resolve) => {
-    db.query(query, async (err: Error, res: SubscribeUser[]) => {
-      if (err) {
-        console.error(err);
-        return;
-      }
+  // const majorId = await getDepartmentIdByMajor(major);
+  const query = `SELECT user FROM subscribe_users WHERE department_id = ${majorId}`;
+  const subscribeUsers = await selectQuery<{ user: string }[]>(query);
+  if (!subscribeUsers.length) {
+    return 0;
+  }
 
-      if (res.length === 0) {
-        resolve(0);
-        return;
-      }
-      for (const userInfo of res) {
-        for (const lists of noticeTitle) {
-          try {
-            const message: PushMessage = {
-              title: `${major} 알림`,
-              body: lists,
-              icon: './icons/icon-192x192.png',
-            };
-            await webpush.sendNotification(
-              JSON.parse(userInfo.user),
-              JSON.stringify(message),
-            );
-          } catch (error) {
-            notificationToSlack(error);
-            const deleteQuery = `DELETE FROM ${major}구독 WHERE user = ?`;
-            db.query(deleteQuery, [userInfo.user], (deleteErr) => {
-              if (deleteErr)
-                notificationToSlack('알림 보낼 수 없는 토큰 삭제 실패');
-              else console.log('알림 보낼 수 없는 토큰 삭제');
-            });
-          }
+  for (const userInfo of subscribeUsers) {
+    for (const lists of noticeTitle) {
+      try {
+        const message: PushMessage = {
+          title: `학과 신규 공지 알림`,
+          body: lists,
+          icon: './icons/icon-192x192.png',
+        };
+        await webpush.sendNotification(
+          JSON.parse(userInfo.user),
+          JSON.stringify(message),
+        );
+      } catch (error) {
+        notificationToSlack(error);
+        try {
+          const deleteQuery = `DELETE FROM subscribe_users WHERE user = ?`;
+          await db.execute(deleteQuery, [userInfo.user]);
+          notificationToSlack(error.message + '유저 미존재하여 강제 구독 취소');
+        } catch (error) {
+          notificationToSlack(error.message + '유저 강제 구독 취소 실패');
         }
-        resolve(res.length);
       }
-    });
-  });
+    }
+  }
 };
