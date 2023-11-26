@@ -31,11 +31,11 @@ export const collegeCrawling = async (): Promise<College[]> => {
           !arr[2].includes('신설')
         ) {
           if (arr[3].endsWith('/')) arr[3] = arr[3].slice(0, -1);
-          const tmpList = {
-            collegeName: arr[0],
-            departmentName: arr[1],
-            departmentSubName: arr[2],
-            departmentLink: arr[3],
+          const tmpList: College = {
+            college_name: arr[0],
+            department_name: arr[1],
+            department_subname: arr[2],
+            department_link: arr[3],
           };
           collegeList.push(tmpList);
         }
