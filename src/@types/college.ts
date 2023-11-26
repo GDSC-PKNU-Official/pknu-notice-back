@@ -1,30 +1,29 @@
 export interface College {
   id?: number;
-  collegeName: string;
-  departmentName: string;
-  departmentSubName: string;
-  departmentLink: string;
-  graduationLink?: string;
+  college_name: string;
+  department_name: string;
+  department_subname: string;
+  department_link: string;
+  graduation_link?: string;
 }
 
-export interface MajorNotices {
-  title: string;
-  path: string;
-  description: string;
-  upload_date: string;
-  rep_yn: string;
-  department_id?: number;
-}
-
-export interface Notice {
+export interface Notices {
   id?: number;
   title: string;
-  path: string;
+  link: string;
   author?: string;
-  rep_yn?: boolean;
-  description: string;
-  date: string;
+  rep_yn?: boolean | NoticeBoolean;
+  description?: string;
+  upload_date: string;
   category?: NoticeCategory;
 }
 
 export type NoticeCategory = 'SCHOOL' | 'LANGUAGE';
+export type NoticeBoolean = 1 | 0;
+
+export interface WhalebeData {
+  title: string;
+  date: string;
+  imgUrl: string;
+  link: string;
+}
