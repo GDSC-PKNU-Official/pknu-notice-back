@@ -41,7 +41,7 @@ const createNoticeTable = async () => {
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,
     link VARCHAR(255) NOT NULL UNIQUE,
-    uploadDate VARCHAR(20) NOT NULL,
+    upload_date VARCHAR(20) NOT NULL,
     author VARCHAR(50) NOT NULL,
     rep_yn BOOLEAN,
     category ENUM('SCHOOL', 'LANGUAGE') NOT NULL
@@ -122,8 +122,8 @@ const createRecruitNoticeTable = async () => {
   }
 };
 
-const createAllTables = () => {
-  createDepartmentTable();
+const createAllTables = async () => {
+  await createDepartmentTable();
   createMajorNoticeTable();
   createNoticeTable();
   createSubscribeTable();
