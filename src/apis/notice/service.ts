@@ -1,80 +1,73 @@
-import { WhalebeData } from '@crawling/whalebeCrawling';
-import db from '@db/index';
-import { Notice } from 'src/@types/college';
+import { selectQuery } from '@db/query/dbQueryHandler';
+import { NoticeCategory, Notices, WhalebeData } from 'src/@types/college';
 import notificationToSlack from 'src/hooks/notificateToSlack';
+import { getDepartmentIdByMajor } from 'src/utils/majorUtils';
 
 interface SeparateNoti {
-  고정: Notice[];
-  일반: Notice[];
+  고정: Notices[];
+  일반: Notices[];
 }
 
-const getNoticesFromTable = (tableName: string) => {
-  return new Promise<Notice[]>((resolve, reject) => {
-    const getNoticesQuery = `SELECT * FROM ${tableName} ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC;`;
-    db.query(getNoticesQuery, (err: Error, res: Notice[]) => {
-      if (err) reject(err);
-      if (res !== undefined && res.length > 0) resolve(res);
-      resolve([]);
-    });
-  });
+const getNoticesFromTable = async (
+  tableName: string,
+  category: NoticeCategory,
+) => {
+  const getNoticesQuery = `SELECT * FROM ${tableName} WHERE category = '${category}' ORDER BY STR_TO_DATE(upload_date, '%Y-%m-%d') DESC;`;
+  try {
+    const notices = await selectQuery<Notices[]>(getNoticesQuery);
+    return notices;
+  } catch (error) {
+    notificationToSlack(error.message + 'notices 테이블 조회 실패');
+    return [];
+  }
 };
 
 export const getNotices = async (department: string): Promise<SeparateNoti> => {
-  const [fixNotices, normalNotices] = await Promise.all([
-    getNoticesFromTable(`${department}고정`),
-    getNoticesFromTable(`${department}일반`),
-  ]);
+  const majorId = await getDepartmentIdByMajor(department);
+  const query = `SELECT * FROM major_notices WHERE department_id = ${majorId};`;
+  const major_notices = await selectQuery<Notices[]>(query);
+  console.log(major_notices);
 
   const notices: SeparateNoti = {
-    고정: [...fixNotices],
-    일반: [...normalNotices],
+    고정: [...major_notices.filter((notice) => notice.rep_yn === 1)],
+    일반: [...major_notices],
   };
+
   return notices;
 };
 
 export const getSchoolNotices = async (): Promise<SeparateNoti> => {
-  const [fixNotices, normalNotices] = await Promise.all([
-    getNoticesFromTable('학교고정'),
-    getNoticesFromTable('학교일반'),
-  ]);
+  const noticeLists = await getNoticesFromTable('notices', 'SCHOOL');
 
   const notices: SeparateNoti = {
-    고정: [...fixNotices],
-    일반: [...normalNotices],
+    고정: [...noticeLists.filter((notice) => notice.rep_yn === 1)],
+    일반: [...noticeLists],
   };
+
   return notices;
 };
 
 export const getWhalebe = async (): Promise<WhalebeData[]> => {
-  const query = 'SELECT * FROM 웨일비;';
-  return new Promise<WhalebeData[]>((resolve) => {
-    db.query(query, (err, res) => {
-      if (err) notificationToSlack('웨일비 조회 실패');
-      const whalebeData = res as WhalebeData[];
-      const today = new Date();
-      const todayString = `${today.getFullYear()}.${String(
-        today.getMonth() + 1,
-      ).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+  const query = 'SELECT * FROM whalebe;';
 
-      const filteredData = whalebeData
-        .filter((data) => data.date >= todayString)
-        .slice(0, 7);
-      resolve(filteredData);
-    });
-  });
+  try {
+    const whalebeData = await selectQuery<WhalebeData[]>(query);
+    const today = new Date();
+    const todayString = `${today.getFullYear()}.${String(
+      today.getMonth() + 1,
+    ).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+
+    const filteredData = whalebeData
+      .filter((data) => data.date >= todayString)
+      .slice(0, 7);
+    return filteredData;
+  } catch (error) {
+    notificationToSlack('웨일비 조회 실패');
+    return;
+  }
 };
 
-export const getLanguage = async (): Promise<Notice[]> => {
-  const query = `SELECT * FROM 어학공지 ORDER BY STR_TO_DATE(uploadDate, '%Y-%m-%d') DESC;`;
-  return new Promise<Notice[]>((resolve) => {
-    db.query(query, (err, res) => {
-      if (err) {
-        notificationToSlack('어학 공지 응답 실패');
-        resolve([]);
-        return;
-      }
-      const languageNoti = res as Notice[];
-      resolve(languageNoti);
-    });
-  });
+export const getLanguage = async (): Promise<Notices[]> => {
+  const languageNotices = await getNoticesFromTable('notices', 'LANGUAGE');
+  return languageNotices;
 };
