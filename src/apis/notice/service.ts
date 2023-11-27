@@ -4,8 +4,15 @@ import notificationToSlack from 'src/hooks/notificateToSlack';
 import { getDepartmentIdByMajor } from 'src/utils/majorUtils';
 
 interface SeparateNoti {
-  고정: Notices[];
-  일반: Notices[];
+  고정: ResponseNotice[];
+  일반: ResponseNotice[];
+}
+
+export interface ResponseNotice {
+  title: string;
+  link: string;
+  author?: string;
+  uploadDate: string;
 }
 
 const getNoticesFromTable = async (
@@ -22,15 +29,21 @@ const getNoticesFromTable = async (
   }
 };
 
+const updateNotice = (notices: Notices[]) => {
+  return notices.map((notice) => {
+    const { title, link, author, upload_date } = notice;
+    return { title, link, author, uploadDate: upload_date };
+  });
+};
+
 export const getNotices = async (department: string): Promise<SeparateNoti> => {
   const majorId = await getDepartmentIdByMajor(department);
   const query = `SELECT * FROM major_notices WHERE department_id = ${majorId};`;
   const major_notices = await selectQuery<Notices[]>(query);
-  console.log(major_notices);
 
   const notices: SeparateNoti = {
-    고정: [...major_notices.filter((notice) => notice.rep_yn === 1)],
-    일반: [...major_notices],
+    고정: updateNotice(major_notices.filter((notice) => notice.rep_yn === 1)),
+    일반: updateNotice(major_notices),
   };
 
   return notices;
@@ -40,8 +53,8 @@ export const getSchoolNotices = async (): Promise<SeparateNoti> => {
   const noticeLists = await getNoticesFromTable('notices', 'SCHOOL');
 
   const notices: SeparateNoti = {
-    고정: [...noticeLists.filter((notice) => notice.rep_yn === 1)],
-    일반: [...noticeLists],
+    고정: updateNotice(noticeLists.filter((notice) => notice.rep_yn === 1)),
+    일반: updateNotice(noticeLists),
   };
 
   return notices;
