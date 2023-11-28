@@ -3,26 +3,35 @@ import {
   noticeListCrawling,
 } from '@crawling/noticeCrawling';
 import db from '@db/index';
-import { RowDataPacket } from 'mysql2';
-import { Notice } from 'src/@types/college';
+import { selectQuery } from '@db/query/dbQueryHandler';
+import { Notices } from 'src/@types/college';
 import { PKNU_URL } from 'src/config/crawlingURL';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
-const saveNotice = (notice: Notice): Promise<void> => {
-  const query = 'INSERT INTO 어학공지 (title, link, uploadDate) VALUES (?,?,?)';
-  const values = [notice.title, notice.path, notice.date];
+interface NotiLink {
+  link: string;
+}
 
-  return new Promise((resolve) => {
-    db.query(query, values, (err) => {
-      if (err) {
-        console.log('어학 공지사항 입력 실패');
-        resolve();
-        return;
-      }
-      console.log('어학 공지사항 입력 성공');
-      resolve();
-    });
-  });
+const saveNotice = async (result: Notices): Promise<boolean> => {
+  const query =
+    'INSERT INTO notices (title, link, upload_date, author, rep_yn, category) VALUES (?,?,?,?,?,?)';
+  const values = [
+    result.title,
+    result.link,
+    result.upload_date,
+    result.author ? result.author : '글로벌어학교육센터',
+    false,
+    'LANGUAGE',
+  ];
+
+  try {
+    await db.execute(query, values);
+    console.log('어학 공지 입력 성공!');
+    return true;
+  } catch (error) {
+    notificationToSlack(error.message + '어학 공지 입력 실패');
+    return false;
+  }
 };
 
 export const saveLanguageNoticeToDB = async () => {
@@ -40,35 +49,25 @@ export const saveLanguageNoticeToDB = async () => {
     ...languageNotiLists2.normalNotice,
   ];
 
-  const savePromises: Promise<void>[] = [];
   const newNoticeTitle: string[] = [];
 
-  const showDBQuery = `SELECT link FROM 어학공지;`;
-  db.query(showDBQuery, async (err, res) => {
-    if (err) {
-      await notificationToSlack('어학공지 조회 실패');
-      return;
-    }
-    const rows = res as RowDataPacket[];
-    let languageNoti: string[] = [];
+  const showDBQuery = `SELECT link FROM notices WHERE category = 'LANGUAGE';`;
+  const languageLinks = (await selectQuery<NotiLink[]>(showDBQuery)).map(
+    (language) => language.link,
+  );
 
-    if (Array.isArray(rows) && rows.length > 0)
-      languageNoti = rows.map((row) => row.link);
+  for (const notice of lists) {
+    if (languageLinks.includes(notice)) continue;
 
-    for (const notice of lists) {
-      const result = await noticeContentCrawling(notice);
-      if (result.path === '') {
-        notificationToSlack(`${notice} 어학 콘텐츠 크롤링 실패`);
-        continue;
-      }
-
-      if (!languageNoti.includes(result.path)) {
-        savePromises.push(saveNotice(result));
-        newNoticeTitle.push(result.title);
-      }
+    const result = await noticeContentCrawling(notice);
+    if (result.link === '') {
+      notificationToSlack(`${notice} 어학 콘텐츠 크롤링 실패`);
+      continue;
     }
 
-    await Promise.all(savePromises);
-    return newNoticeTitle;
-  });
+    const res = await saveNotice(result);
+    if (res) newNoticeTitle.push(result.title);
+  }
+
+  return newNoticeTitle;
 };

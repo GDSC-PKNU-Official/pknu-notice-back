@@ -1,150 +1,135 @@
-import { College } from 'src/@types/college';
 import db from 'src/db';
 
-const createDepartmentTable = () => {
+const createDepartmentTable = async () => {
   const createTableQuery = `CREATE TABLE departments (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    collegeName VARCHAR(255) NOT NULL,
-    departmentName VARCHAR(255) NOT NULL,
-    departmentSubName VARCHAR(255) NOT NULL,
-    departmentLink VARCHAR(255) NOT NULL
+    college_name VARCHAR(50) NOT NULL,
+    department_name VARCHAR(100) NOT NULL,
+    department_subname VARCHAR(100) NOT NULL,
+    department_link VARCHAR(255) NOT NULL,
+    graduation_link VARCHAR(255)
 );`;
 
-  db.query(createTableQuery, (error) => {
-    if (error) {
-      console.log('학과 테이블 생성 실패', error);
-    } else {
-      console.log('학과 테이블 생성 성공!');
-    }
-  });
+  try {
+    await db.execute(createTableQuery);
+    console.log('학과 테이블 생성 성공!');
+  } catch (error) {
+    console.log('학과 테이블 생성 실패', error);
+  }
 };
 
-const createGraduationTable = () => {
-  const createGraduationQuery = `CREATE TABLE graduation (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    department VARCHAR(255) NOT NULL,
-    link VARCHAR(255) NOT NULL
-  );`;
-
-  db.query(createGraduationQuery, (error) => {
-    if (error) {
-      console.log('졸업요건 테이블 생성 실패', error);
-    } else {
-      console.log('졸업요건 테이블 생성 성공!');
-    }
-  });
-};
-
-const createNoticeTable = (college: College[]) => {
-  for (const data of college) {
-    const major =
-      data.departmentSubName !== '-'
-        ? data.departmentSubName
-        : data.departmentName;
-    for (const tableName of [`${major}고정`, `${major}일반`]) {
-      const createTableQuery = `CREATE TABLE ${tableName} (
-                id INT PRIMARY KEY AUTO_INCREMENT,
+const createMajorNoticeTable = async () => {
+  const createTableQuery = `CREATE TABLE major_notices (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
                 title VARCHAR(255) NOT NULL,
                 link VARCHAR(255) NOT NULL UNIQUE,
-                uploadDate VARCHAR(255) NOT NULL
+                upload_date VARCHAR(20) NOT NULL,
+                rep_yn BOOLEAN,
+                department_id INT NOT NULL,
+                FOREIGN KEY (department_id) REFERENCES departments(id)
             );`;
-
-      db.query(createTableQuery, (error) => {
-        if (error) {
-          console.log('테이블 생성 실패', error);
-        } else {
-          console.log('학과공지 테이블 생성 성공!');
-        }
-      });
-    }
+  try {
+    await db.execute(createTableQuery);
+    console.log('학과 공지사항 테이블 생성 성공!');
+  } catch (error) {
+    console.log('학과 공지사항 테이블 생성 실패', error);
   }
 };
 
-const createSubscribeTable = (college: College[]) => {
-  for (const data of college) {
-    const major =
-      data.departmentSubName !== '-'
-        ? data.departmentSubName
-        : data.departmentName;
-
-    const tableName = `${major}구독`;
-    const createTableQuery = `CREATE TABLE ${tableName} (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                user VARCHAR(600) NOT NULL UNIQUE
-            );`;
-
-    db.query(createTableQuery, (error) => {
-      if (error) {
-        console.log('테이블 생성 실패', error);
-      } else {
-        console.log('학과구독 테이블 생성 성공!');
-      }
-    });
-  }
-};
-
-const createSchoolNoticeTable = () => {
-  for (const tableName of [`학교고정`, `학교일반`]) {
-    const createTableQuery = `CREATE TABLE ${tableName} (
-      id INT PRIMARY KEY AUTO_INCREMENT,
-      title VARCHAR(255) NOT NULL,
-      link VARCHAR(255) NOT NULL UNIQUE,
-      uploadDate VARCHAR(255) NOT NULL
-          );`;
-
-    db.query(createTableQuery, (error) => {
-      if (error) {
-        console.log('테이블 생성 실패', error);
-      } else {
-        console.log('학교 테이블 생성 성공!');
-      }
-    });
-  }
-};
-
-const createWhalebeDataTable = () => {
-  const createTableQuery = `CREATE TABLE 웨일비 (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255) NOT NULL UNIQUE,
-    date VARCHAR(255) NOT NULL,
-    imgUrl VARCHAR(255) NOT NULL,
-    link VARCHAR(255) NOT NULL
-        );`;
-
-  db.query(createTableQuery, (error) => {
-    if (error) {
-      console.log('웨일비 DB 생성 실패', error);
-      return;
-    }
-    console.log('웨일비 테이블 생성 성공!');
-  });
-};
-
-const createLanguageDataTable = () => {
-  const createTableQuery = `CREATE TABLE 어학공지 (
+const createNoticeTable = async () => {
+  const createTableQuery = `CREATE TABLE notices (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,
     link VARCHAR(255) NOT NULL UNIQUE,
-    uploadDate VARCHAR(255) NOT NULL
+    upload_date VARCHAR(20) NOT NULL,
+    author VARCHAR(50) NOT NULL,
+    rep_yn BOOLEAN,
+    category ENUM('SCHOOL', 'LANGUAGE') NOT NULL
         );`;
 
-  db.query(createTableQuery, (error) => {
-    if (error) {
-      console.log('어학 DB 생성 실패', error);
-      return;
-    }
-    console.log('어학 테이블 생성 성공!');
-  });
+  try {
+    await db.execute(createTableQuery);
+    console.log('공지사항 테이블 생성 성공!');
+  } catch (error) {
+    console.log('공지사항 테이블 생성 실패', error);
+  }
 };
 
-const createAllTables = (college: College[]) => {
-  createDepartmentTable();
+const createSubscribeTable = async () => {
+  const createTableQuery = `CREATE TABLE subscribe_users (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                user VARCHAR(600) NOT NULL UNIQUE,
+                department_id INT NOT NULL,
+                FOREIGN KEY (department_id) REFERENCES departments(id)
+            );`;
+
+  try {
+    await db.execute(createTableQuery);
+    console.log('알림 구독 테이블 생성 성공!');
+  } catch (error) {
+    console.log('알림 구독 테이블 생성 실패', error);
+  }
+};
+
+const createSubscribeKeywordTable = async () => {
+  const createTableQuery = `CREATE TABLE subscribe_keywords (
+                id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                keyword VARCHAR(100) NOT NULL UNIQUE,
+                user_id BIGINT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES subscribe_users(id)
+            );`;
+
+  try {
+    await db.execute(createTableQuery);
+    console.log('알림 구독 키워드 테이블 생성 성공!');
+  } catch (error) {
+    console.log('알림 구독 키워드 테이블 생성 실패', error);
+  }
+};
+
+const createWhalebeDataTable = async () => {
+  const createTableQuery = `CREATE TABLE whalebe (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    link VARCHAR(255) NOT NULL UNIQUE,
+    operating_period VARCHAR(30) NOT NULL,
+    recruitment_period VARCHAR(30) NOT NULL,
+    imgurl VARCHAR(500) NOT NULL
+        );`;
+
+  try {
+    await db.execute(createTableQuery);
+    console.log('웨일비 테이블 생성 성공!');
+  } catch (error) {
+    console.log('웨일비 테이블 생성 실패', error);
+  }
+};
+
+const createRecruitNoticeTable = async () => {
+  const createTableQuery = `CREATE TABLE recruit_notices (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    link VARCHAR(255) NOT NULL UNIQUE,
+    upload_date VARCHAR(30) NOT NULL,
+    recruitment_period VARCHAR(30) NOT NULL
+        );`;
+
+  try {
+    await db.execute(createTableQuery);
+    console.log('채용 공지 테이블 생성 성공!');
+  } catch (error) {
+    console.log('채용 공지 생성 실패', error);
+  }
+};
+
+const createAllTables = async () => {
+  await createDepartmentTable();
+  createMajorNoticeTable();
+  createNoticeTable();
+  createSubscribeTable();
+  createSubscribeKeywordTable();
   createWhalebeDataTable();
-  createLanguageDataTable();
-  createGraduationTable();
-  createSchoolNoticeTable();
-  createNoticeTable(college);
-  createSubscribeTable(college);
+  createRecruitNoticeTable();
 };
 
 export default createAllTables;
