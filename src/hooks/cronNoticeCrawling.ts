@@ -54,6 +54,6 @@ cron.schedule('0 0-9 * * 1-5', async () => {
   cronNoticeCrawling();
 });
 
-cron.schedule('0 0-9 * * 1-5', async () => {
+cron.schedule('30 3 * * 1-5', async () => {
   cronExtracurricularCrawling();
 });
