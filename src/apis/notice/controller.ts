@@ -1,6 +1,7 @@
 import {
   getLanguage,
   getNotices,
+  getRecruit,
   getSchoolNotices,
   getWhalebe,
 } from '@apis/notice/service';
@@ -35,6 +36,15 @@ router.get('/language', async (req: Request, res: Response) => {
   try {
     const languageNoti = await getLanguage();
     res.json(languageNoti);
+  } catch (err) {
+    res.json();
+  }
+});
+
+router.get('/recruit', async (req: Request, res: Response) => {
+  try {
+    const recruitData = await getRecruit();
+    res.json(recruitData);
   } catch (err) {
     res.json();
   }

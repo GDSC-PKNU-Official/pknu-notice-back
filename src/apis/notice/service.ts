@@ -1,5 +1,10 @@
 import { selectQuery } from '@db/query/dbQueryHandler';
-import { NoticeCategory, Notices, WhalebeData } from 'src/@types/college';
+import {
+  NoticeCategory,
+  Notices,
+  RecruitData,
+  WhalebeData,
+} from 'src/@types/college';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 import { getDepartmentIdByMajor } from 'src/utils/majorUtils';
 
@@ -83,4 +88,16 @@ export const getWhalebe = async (): Promise<WhalebeData[]> => {
 export const getLanguage = async (): Promise<Notices[]> => {
   const languageNotices = await getNoticesFromTable('notices', 'LANGUAGE');
   return languageNotices;
+};
+
+export const getRecruit = async (): Promise<RecruitData[]> => {
+  const query = 'SELECT * FROM recruit_notices;';
+  const recruitNotices = await selectQuery<RecruitData[]>(query);
+  recruitNotices.sort(
+    (notice1, notice2) =>
+      new Date(notice2.recruitment_period.split('~')[0]).getTime() -
+      new Date(notice1.recruitment_period.split('~')[0]).getTime(),
+  );
+  console.log(recruitNotices);
+  return recruitNotices;
 };
