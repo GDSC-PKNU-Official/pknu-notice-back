@@ -1,12 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-
-export interface WhalebeData {
-  title: string;
-  date: string;
-  imgUrl: string;
-  link: string;
-}
+import { WhalebeData } from 'src/@types/college';
 
 const sliceURL = (link: string): string => {
   if (link.startsWith('location.href=')) {
@@ -29,20 +23,33 @@ export const whalebeCrawling = async (): Promise<WhalebeData[]> => {
   if (programs.length < 1) return;
 
   programs.each((_, element) => {
-    const imgUrl = hostname + $(element).find('img').attr('src');
+    const imgurl = hostname + $(element).find('img').attr('src');
     const link = hostname + sliceURL($(element).find('div').attr('onclick'));
     const title = $(element).find('.card-title').text().trim();
-    const date = $(element)
+    const recruitment_period = $(element)
       .find('.app_date')
       .find('.col-12')
       .first()
+      .find('span')
+      .eq(1)
       .text()
-      .split('~')[1]
-      .trim();
-    const tmpData = {
+      .trim()
+      .replace('&nbsp;', '');
+    const operating_period = $(element)
+      .find('.app_date')
+      .find('.col-12')
+      .eq(1)
+      .find('span')
+      .eq(1)
+      .text()
+      .trim()
+      .replace('&nbsp;', '');
+
+    const tmpData: WhalebeData = {
       title,
-      date,
-      imgUrl,
+      recruitment_period,
+      operating_period,
+      imgurl,
       link,
     };
     whalebeData.push(tmpData);

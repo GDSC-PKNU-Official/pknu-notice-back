@@ -204,7 +204,13 @@ export const saveWhalebeToDB = async (): Promise<void> => {
 
   // TODO: 웨일비 크롤링하는 데이터 추가해야함
   const promises = whalebeDatas.map((data) => {
-    const values = [data.title, data.link, 'tmp', 'tmp2', data.imgUrl];
+    const values = [
+      data.title,
+      data.link,
+      data.operating_period,
+      data.recruitment_period,
+      data.imgurl,
+    ];
 
     return db.execute(query, values);
   });
