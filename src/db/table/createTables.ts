@@ -110,7 +110,6 @@ const createRecruitNoticeTable = async () => {
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255) NOT NULL,
     link VARCHAR(255) NOT NULL UNIQUE,
-    upload_date VARCHAR(30) NOT NULL,
     recruitment_period VARCHAR(30) NOT NULL
         );`;
 
