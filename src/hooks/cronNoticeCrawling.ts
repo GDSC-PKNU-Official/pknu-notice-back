@@ -6,6 +6,7 @@ import {
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
 } from '@db/data/noticeHandler';
+import { recruitHandler } from '@db/data/recruitHandler';
 import cron from 'node-cron';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
@@ -21,6 +22,7 @@ const pushToUsers = async (pushNotiToUserLists: PushNoti) => {
 cron.schedule('0 0-9 * * 1-5', async () => {
   notificationToSlack('크롤링 동작 시작!');
   const pushNotiToUserLists = await saveMajorNoticeToDB();
+  await recruitHandler();
   await saveSchoolNoticeToDB();
   await saveLanguageNoticeToDB();
   await saveWhalebeToDB();
