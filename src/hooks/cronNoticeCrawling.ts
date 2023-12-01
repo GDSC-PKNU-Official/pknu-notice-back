@@ -22,20 +22,22 @@ const pushToUsers = async (pushNotiToUserLists: PushNoti) => {
 
 const cronNoticeCrawling = async () => {
   const connection = await db.getConnection();
+  await connection.beginTransaction();
   try {
-    connection.beginTransaction();
-    const pushNotiToUserLists = await saveMajorNoticeToDB();
+    const pushNotiToUserLists = await saveMajorNoticeToDB(connection);
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1; // 월은 0부터 시작하므로 1을 더해줍니다.
     const day = today.getDate();
     notificationToSlack(`${year}-${month}-${day} 크롤링 완료`);
-    pushToUsers(pushNotiToUserLists);
     await connection.commit();
+    pushToUsers(pushNotiToUserLists);
   } catch (error) {
     await connection.rollback();
     notificationToSlack(error.message);
     cronNoticeCrawling();
+  } finally {
+    connection.release();
   }
 };
 
