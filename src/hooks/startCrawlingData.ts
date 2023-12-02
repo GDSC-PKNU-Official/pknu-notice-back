@@ -22,8 +22,8 @@ export const initialCrawling = async () => {
     await saveDepartmentToDB(collegeList);
     await saveLanguageNoticeToDB();
     // await saveGraduationRequirementToDB();
-    await saveSchoolNoticeToDB();
-    await saveWhalebeToDB();
+    saveSchoolNoticeToDB();
+    saveWhalebeToDB();
     await saveMajorNoticeToDB();
   } catch (err) {
     console.log(err + '최종 에러 캐치');
