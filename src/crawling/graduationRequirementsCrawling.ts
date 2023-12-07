@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+
 import {
   DOMAIN_TO_CMS_DEPARTMENTS,
   EXCEPTIONAL_GRADUATION_KEYWORDS,
@@ -8,7 +9,7 @@ import {
   GRADUATION_IN_ARCHIVE,
   GRADUATION_IN_NOTICE_A,
   GRADUATION_IN_NOTICE_B,
-} from 'src/constants/graduation';
+} from '../constants/graduation';
 
 const handleSearchKeyword = (departmentName: string) => {
   const originKeyword = '졸업요건';
