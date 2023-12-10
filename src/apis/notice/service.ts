@@ -76,7 +76,10 @@ export const getWhalebe = async (): Promise<WhalebeData[]> => {
     ).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
 
     const filteredData = whalebeData
-      .filter((data) => data.date >= todayString)
+      .filter(
+        (data) =>
+          data.recruitment_period.split('~')[1].trim() >= todayString || data,
+      )
       .slice(0, 7);
     return filteredData;
   } catch (error) {

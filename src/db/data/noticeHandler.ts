@@ -5,6 +5,7 @@ import {
 } from '@crawling/noticeCrawling';
 import { whalebeCrawling } from '@crawling/whalebeCrawling';
 import { selectQuery } from '@db/query/dbQueryHandler';
+import { PoolConnection } from 'mysql2/promise';
 import { College, Notices, NoticeCategory } from 'src/@types/college';
 import db from 'src/db';
 import notificationToSlack from 'src/hooks/notificateToSlack';
@@ -37,6 +38,7 @@ const saveMajorNotice = async (
   notice: Notices,
   departmentId: number,
   isPinned: boolean,
+  connection?: PoolConnection,
 ): Promise<void> => {
   const saveNoticeQuery =
     'INSERT INTO major_notices (title, link, upload_date, rep_yn, department_id) VALUES (?, ?, ?, ?, ?)';
@@ -49,7 +51,8 @@ const saveMajorNotice = async (
   ];
 
   try {
-    await db.execute(saveNoticeQuery, values);
+    if (connection) await connection.execute(saveNoticeQuery, values);
+    else await db.execute(saveNoticeQuery, values);
     console.log(`ID: ${departmentId} 공지사항 입력 성공`);
   } catch (error) {
     notificationToSlack(error.message + '공지사항 입력 실패');
@@ -82,20 +85,23 @@ const convertSpecificNoticeToPinnedNotice = async (
   }
 };
 
-export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
+export const saveMajorNoticeToDB = async (
+  connection?: PoolConnection,
+): Promise<PushNoti> => {
   await convertAllNoticeToNormalNotice('major_notices');
   const query = 'SELECT * FROM departments;';
-  const colleges = await selectQuery<College[]>(query);
+  const colleges = await selectQuery<College[]>(query, connection);
 
   const getNotiLinkQuery = `SELECT link FROM major_notices;`;
-  const noticeLinksInDB = (await selectQuery<NotiLink[]>(getNotiLinkQuery)).map(
-    (noticeLink) => noticeLink.link,
-  );
+  const noticeLinksInDB = (
+    await selectQuery<NotiLink[]>(getNotiLinkQuery, connection)
+  ).map((noticeLink) => noticeLink.link);
 
-  // const savePromises: Promise<void>[] = [];
+  const savePromises: Promise<void>[] = [];
   const newNoticeMajor: PushNoti = {};
 
   for (const college of colleges) {
+    console.log(college.id);
     const noticeLink = await noticeCrawling(college);
     const noticeLists = await noticeListCrawling(noticeLink);
 
@@ -117,7 +123,7 @@ export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
       if (noticeLinksInDB.includes(result.link)) continue;
       if (!newNoticeMajor[college.id]) newNoticeMajor[college.id] = [];
       newNoticeMajor[college.id].push(result.title);
-      await saveMajorNotice(result, college.id, false);
+      savePromises.push(saveMajorNotice(result, college.id, false, connection));
     }
 
     if (pinnedNotices) {
@@ -129,7 +135,9 @@ export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
         }
 
         if (!noticeLinksInDB.includes(result.link)) {
-          saveMajorNotice(result, college.id, true);
+          savePromises.push(
+            saveMajorNotice(result, college.id, true, connection),
+          );
           continue;
         }
         convertSpecificNoticeToPinnedNotice('major_notices', result.link);
@@ -137,7 +145,7 @@ export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
     }
   }
 
-  // await Promise.all(savePromises);
+  await Promise.all(savePromises);
   return newNoticeMajor;
 };
 
@@ -204,7 +212,13 @@ export const saveWhalebeToDB = async (): Promise<void> => {
 
   // TODO: 웨일비 크롤링하는 데이터 추가해야함
   const promises = whalebeDatas.map((data) => {
-    const values = [data.title, data.link, 'tmp', 'tmp2', data.imgUrl];
+    const values = [
+      data.title,
+      data.link,
+      data.operating_period,
+      data.recruitment_period,
+      data.imgurl,
+    ];
 
     return db.execute(query, values);
   });

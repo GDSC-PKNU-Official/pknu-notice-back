@@ -23,8 +23,9 @@ export type NoticeBoolean = 1 | 0;
 
 export interface WhalebeData {
   title: string;
-  date: string;
-  imgUrl: string;
+  operating_period: string;
+  recruitment_period: string;
+  imgurl: string;
   link: string;
 }
 
