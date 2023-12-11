@@ -1,31 +1,21 @@
-import db from '@db/index';
-import { QueryError, RowDataPacket } from 'mysql2';
+import { selectQuery } from '@db/query/dbQueryHandler';
+import notificationToSlack from 'src/hooks/notificateToSlack';
 
-interface GraduationLink extends RowDataPacket {
-  department: string;
-  link: string;
+interface GraduationData {
+  graduation_link: string | '';
 }
 
 export const getGraduationLink = async (
   major: string,
-): Promise<GraduationLink | null> => {
-  return new Promise((resolve, reject) => {
-    const getGraduationLinkQuery =
-      'SELECT department, link FROM graduation WHERE department = ?';
-    db.query<GraduationLink[]>(
-      getGraduationLinkQuery,
-      [major],
-      (err: QueryError, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          if (result) {
-            resolve(result[0] as GraduationLink);
-          } else {
-            resolve(null);
-          }
-        }
-      },
-    );
-  });
+): Promise<string | ''> => {
+  console.log(major);
+  const getGraduationLinkQuery = `SELECT graduation_link FROM departments WHERE department_name = '${major}' OR department_subname = '${major}'`;
+
+  try {
+    const data = await selectQuery<GraduationData[]>(getGraduationLinkQuery);
+    const { graduation_link } = data[0];
+    return graduation_link;
+  } catch (error) {
+    notificationToSlack(error);
+  }
 };

@@ -1,5 +1,4 @@
 import { collegeCrawling } from '@crawling/collegeCrawling';
-import { saveGraduationRequirementToDB } from '@db/data/graduation';
 import { saveLanguageNoticeToDB } from '@db/data/languageHandler';
 import {
   saveDepartmentToDB,
