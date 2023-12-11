@@ -20,7 +20,7 @@ interface NotiLink {
 
 export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
   const saveCollegePromises = college.map(async (data) => {
-    const saveCollegeQuery = `INSERT INTO departments (college_name, department_name, department_subname, department_link) VALUES ('${data.college_name}', '${data.department_name}', '${data.department_subname}', '${data.department_link}');`;
+    const saveCollegeQuery = `INSERT INTO departments (college_name, department_name, department_subname, department_link, graduation_link) VALUES ('${data.college_name}', '${data.department_name}', '${data.department_subname}', '${data.department_link}', '${data.graduation_link}');`;
 
     try {
       await db.execute(saveCollegeQuery);

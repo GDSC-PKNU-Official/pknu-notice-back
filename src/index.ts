@@ -13,9 +13,10 @@ import webpush from 'src/config/webpush';
 import { initialCrawling } from 'src/hooks/startCrawlingData';
 import './hooks/cronNoticeCrawling';
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const app = express();
 app.use(cors(corsOptions));
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 app.use(express.json());
 app.use(errorHandler);
 
@@ -30,7 +31,7 @@ app.use('/api/graduation', graduationRouter);
 app.use('/api/subscription', subscriptionRouter);
 
 app.get('/test', (req: Request, res: Response) => {
-  console.log('tet');
+  console.log('test');
   res.send('Hello');
 });
 
