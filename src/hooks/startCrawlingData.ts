@@ -6,6 +6,7 @@ import {
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
 } from '@db/data/noticeHandler';
+import { recruitHandler } from '@db/data/recruitHandler';
 import db from '@db/index';
 import createNoticeTable from '@db/table/createTables';
 import { RowDataPacket } from 'mysql2';
@@ -20,6 +21,8 @@ export const initialCrawling = async () => {
     await createNoticeTable();
     await saveDepartmentToDB(collegeList);
     await saveLanguageNoticeToDB();
+    await recruitHandler();
+    // await saveGraduationRequirementToDB();
     saveSchoolNoticeToDB();
     saveWhalebeToDB();
     await saveMajorNoticeToDB();

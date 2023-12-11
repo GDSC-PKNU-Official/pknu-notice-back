@@ -6,6 +6,7 @@ import {
   saveSchoolNoticeToDB,
   saveWhalebeToDB,
 } from '@db/data/noticeHandler';
+import { recruitHandler } from '@db/data/recruitHandler';
 import db from '@db/index';
 import cron from 'node-cron';
 import notificationToSlack from 'src/hooks/notificateToSlack';

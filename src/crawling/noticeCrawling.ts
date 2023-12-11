@@ -249,5 +249,14 @@ export const noticeContentCrawling = async (link: string): Promise<Notices> => {
     return notice;
   }
 
+  const brdListTable = $('table.brdList').find('tbody').find('tr'); // 채용 공지사항 크롤링으로 upload_date는 모집기간을 가짐 (따로 타입을 만들어서 반환하기 싫기때문)
+  if (brdListTable.length > 0) {
+    const title = brdListTable.first().find('td').eq(1).text().trim();
+    const start_date = brdListTable.eq(2).find('td').eq(1).text().trim();
+    const end_date = brdListTable.eq(2).find('td').eq(3).text().trim();
+    const upload_date = start_date + ' ~ ' + end_date;
+    return { title, link, upload_date, description: '' };
+  }
+
   return { title: '', link: '', upload_date: '', description: '' };
 };

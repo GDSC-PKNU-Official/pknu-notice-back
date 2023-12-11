@@ -28,3 +28,9 @@ export interface WhalebeData {
   imgurl: string;
   link: string;
 }
+
+export interface RecruitData {
+  title: string;
+  link: string;
+  recruitment_period: string;
+}
