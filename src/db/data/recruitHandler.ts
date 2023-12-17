@@ -38,8 +38,8 @@ export const recruitHandler = async () => {
 
   for (let pageIndex = 1; pageIndex <= maxPageIndex; pageIndex++) {
     const noticeLists = await noticeListCrawling(
-      PKNU_URL.RECRUIT_NOTICE(pageIndex),
-      PKNU_URL.RECRUIT_NOTICE_HOSTLINK,
+      PKNU_URL.recruit_notice(pageIndex),
+      PKNU_URL.recruit_notice_hostlink,
     );
     for (const noticeList of noticeLists.normalNotice) {
       if (recruitLinksInDB.includes(noticeList)) break;
