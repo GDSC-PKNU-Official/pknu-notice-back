@@ -7,6 +7,7 @@ import { whalebeCrawling } from '@crawling/whalebeCrawling';
 import { selectQuery } from '@db/query/dbQueryHandler';
 import { PoolConnection } from 'mysql2/promise';
 import { College, Notices, NoticeCategory } from 'src/@types/college';
+import { PKNU_URL } from 'src/config/crawlingURL';
 import db from 'src/db';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
@@ -179,9 +180,7 @@ export const saveSchoolNoticeToDB = async (): Promise<void> => {
     (schoolNotiLink) => schoolNotiLink.link,
   );
 
-  // const savePromises: Promise<void>[] = [];
-  const pknuNoticeLink = 'https://www.pknu.ac.kr/main/163';
-  const noticeLists = await noticeListCrawling(pknuNoticeLink);
+  const noticeLists = await noticeListCrawling(PKNU_URL.main_homepage_notice);
   const pinnedNotices = noticeLists.pinnedNotice;
   const normalNotices = noticeLists.normalNotice;
 
@@ -201,8 +200,6 @@ export const saveSchoolNoticeToDB = async (): Promise<void> => {
     const notice = await noticeContentCrawling(noticeLink);
     await saveNotice(notice, false, 'SCHOOL');
   }
-
-  // await Promise.all(savePromises);
 };
 
 export const saveWhalebeToDB = async (): Promise<void> => {

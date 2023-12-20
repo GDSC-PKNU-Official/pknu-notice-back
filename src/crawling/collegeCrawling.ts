@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { College } from 'src/@types/college';
+import { PKNU_URL } from 'src/config/crawlingURL';
 
 import { crawlingGraudationLinks } from './graduationRequirementsCrawling';
 
@@ -18,8 +19,7 @@ const getCollegeData = ($: cheerio.Root, row: cheerio.Element) => {
 };
 
 export const collegeCrawling = async (): Promise<College[]> => {
-  const pknuURL = 'https://www.pknu.ac.kr';
-  const response = await axios.get(pknuURL + '/main/23');
+  const response = await axios.get(PKNU_URL.major_information_page);
   const $ = cheerio.load(response.data);
   const collegeTable = $('#user-table');
   const rows = collegeTable.find('tr').toArray();
