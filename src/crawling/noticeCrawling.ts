@@ -236,6 +236,15 @@ export const noticeContentCrawling = async (link: string): Promise<Notices> => {
       .first()
       .text()
       .trim();
+    const author = bdContTable
+      .find('tbody')
+      .first()
+      .find('tr')
+      .eq(1)
+      .find('td')
+      .eq(1)
+      .text()
+      .trim();
     const upload_date = bdContTable
       .find('tbody')
       .first()
@@ -246,7 +255,7 @@ export const noticeContentCrawling = async (link: string): Promise<Notices> => {
       .text()
       .trim();
     const description = bdContTable.find('div.bdvTxt_wrap').text().trim();
-    const notice: Notices = { title, link, upload_date, description };
+    const notice: Notices = { title, author, link, upload_date, description };
     return notice;
   }
 

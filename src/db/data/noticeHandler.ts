@@ -160,7 +160,7 @@ const saveNotice = async (
     notice.title,
     notice.link,
     notice.upload_date,
-    '부경대학교',
+    notice.author ? notice.author : '부경대학교',
     isPinned,
     category,
   ];
