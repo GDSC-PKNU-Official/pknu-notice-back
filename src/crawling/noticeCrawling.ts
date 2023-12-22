@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { College } from 'src/@types/college';
 import { Notices } from 'src/@types/college';
+import { MAJOR_URL } from 'src/config/crawlingURL';
 
 interface NoticeLists {
   pinnedNotice?: string[];
@@ -37,7 +38,7 @@ export const noticeCrawling = async (college: College): Promise<string> => {
   if (college.department_subname === '의공학전공') {
     protocol = 'http://';
   } else if (college.department_subname === '공간정보시스템공학전공')
-    return 'http://geoinfo.pknu.ac.kr/05piazza/08.php';
+    return MAJOR_URL.spatial_information_system_engineering_notice;
   const response = await axios.get(college.department_link);
   const hostLink = protocol + response.request._redirectable._options.hostname;
   const $ = cheerio.load(response.data);
@@ -74,10 +75,8 @@ export const noticeListCrawling = async (
   const pinnedNotice: string[] = [];
   const normalNotice: string[] = [];
 
-  if (link === 'http://geoinfo.pknu.ac.kr/05piazza/08.php') {
-    const noticePage2Link =
-      'http://geoinfo.pknu.ac.kr/05piazza/08.php?p=2&key=&keyword=&bbscode=cate0501&reCategory=';
-    const noticePage2Lists = await noticeListCrawling(noticePage2Link, link);
+  if (link === MAJOR_URL.spatial_information_system_engineering_notice) {
+    const noticePage2Lists = await noticeListCrawling(link);
     pinnedNotice.push(...noticePage2Lists.pinnedNotice);
     normalNotice.push(...noticePage2Lists.normalNotice);
   }
@@ -94,19 +93,21 @@ export const noticeListCrawling = async (
       .text()
       .match(/\d{4}[-.]\d{2}[-.]\d{2}/);
 
-    if (link.startsWith('http://geoinfo.pknu.ac.kr/05piazza/08.php')) {
+    if (
+      link.startsWith(MAJOR_URL.spatial_information_system_engineering_notice)
+    ) {
       // 공간정보시스템공학과
       if ($(element).find('td').first().text().trim() === '공지')
         pinnedNotice.push(tmpLink);
       else normalNotice.push(tmpLink);
       flag = false;
-    } else if (link === 'http://bme.pknu.ac.kr/bbs/board.php?bo_table=notice') {
+    } else if (link === MAJOR_URL.biomedical_engineering_notice) {
       // 의공학과
       if ($(element).find('.notice_icon').length > 0)
         pinnedNotice.push(tmpLink);
       else normalNotice.push(tmpLink);
       flag = false;
-    } else if (link === 'https://visual.pknu.ac.kr/visual/3674') {
+    } else if (link === MAJOR_URL.visual_design_notice) {
       pinnedNotice.push(tmpLink);
     } else {
       const dateMatch = findDate[0];
@@ -235,6 +236,15 @@ export const noticeContentCrawling = async (link: string): Promise<Notices> => {
       .first()
       .text()
       .trim();
+    const author = bdContTable
+      .find('tbody')
+      .first()
+      .find('tr')
+      .eq(1)
+      .find('td')
+      .eq(1)
+      .text()
+      .trim();
     const upload_date = bdContTable
       .find('tbody')
       .first()
@@ -245,7 +255,7 @@ export const noticeContentCrawling = async (link: string): Promise<Notices> => {
       .text()
       .trim();
     const description = bdContTable.find('div.bdvTxt_wrap').text().trim();
-    const notice: Notices = { title, link, upload_date, description };
+    const notice: Notices = { title, author, link, upload_date, description };
     return notice;
   }
 

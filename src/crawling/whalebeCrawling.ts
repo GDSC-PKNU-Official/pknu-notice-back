@@ -1,6 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { WhalebeData } from 'src/@types/college';
+import { PKNU_URL } from 'src/config/crawlingURL';
 
 const sliceURL = (link: string): string => {
   if (link.startsWith('location.href=')) {
@@ -12,7 +13,7 @@ const sliceURL = (link: string): string => {
 };
 
 export const whalebeCrawling = async (): Promise<WhalebeData[]> => {
-  const hostname = 'https://whalebe.pknu.ac.kr';
+  const hostname = PKNU_URL.whalebe_homepage;
   const whalebeLink = hostname + '/main';
   const whalebeData: WhalebeData[] = [];
 
