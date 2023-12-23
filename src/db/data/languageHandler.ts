@@ -6,6 +6,7 @@ import db from '@db/index';
 import { selectQuery } from '@db/query/dbQueryHandler';
 import { Notices } from 'src/@types/college';
 import { PKNU_URL } from 'src/config/crawlingURL';
+import LANGUAGEAUTHOR from 'src/constants/languageAuthor';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
 interface NotiLink {
@@ -23,6 +24,8 @@ const saveNotice = async (result: Notices): Promise<boolean> => {
     false,
     'LANGUAGE',
   ];
+
+  if (!LANGUAGEAUTHOR.includes(result.author)) return true;
 
   try {
     await db.execute(query, values);
@@ -48,6 +51,11 @@ export const saveLanguageNoticeToDB = async () => {
     ...languageNotiLists1.normalNotice,
     ...languageNotiLists2.normalNotice,
   ];
+
+  if (languageNotiLists1.pinnedNotice)
+    lists.push(...languageNotiLists1.pinnedNotice);
+  if (languageNotiLists2.pinnedNotice)
+    lists.push(...languageNotiLists2.pinnedNotice);
 
   const newNoticeTitle: string[] = [];
 
