@@ -9,8 +9,8 @@ import notificationToSlack from 'src/hooks/notificateToSlack';
 import { getDepartmentIdByMajor } from 'src/utils/majorUtils';
 
 interface SeparateNoti {
-  고정: ResponseNotice[];
-  일반: ResponseNotice[];
+  고정: ResponseNotice[] | Notices[];
+  일반: ResponseNotice[] | Notices[];
 }
 
 export interface ResponseNotice {
@@ -88,9 +88,14 @@ export const getWhalebe = async (): Promise<WhalebeData[]> => {
   }
 };
 
-export const getLanguage = async (): Promise<Notices[]> => {
+export const getLanguage = async (): Promise<SeparateNoti> => {
   const languageNotices = await getNoticesFromTable('notices', 'LANGUAGE');
-  return languageNotices;
+  const notices: SeparateNoti = {
+    일반: updateNotice(languageNotices),
+    고정: [],
+  };
+
+  return notices;
 };
 
 export const getRecruit = async (): Promise<RecruitData[]> => {
@@ -101,6 +106,6 @@ export const getRecruit = async (): Promise<RecruitData[]> => {
       new Date(notice2.recruitment_period.split('~')[0]).getTime() -
       new Date(notice1.recruitment_period.split('~')[0]).getTime(),
   );
-  console.log(recruitNotices);
+
   return recruitNotices;
 };
