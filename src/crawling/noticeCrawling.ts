@@ -1,7 +1,8 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { College } from 'src/@types/college';
-import { Notice } from 'src/@types/college';
+import { Notices } from 'src/@types/college';
+import { MAJOR_URL } from 'src/config/crawlingURL';
 
 interface NoticeLists {
   pinnedNotice?: string[];
@@ -20,7 +21,7 @@ const findNoticeLink = (
 
   targetElements.each((index, element) => {
     const link = $(element).attr('href');
-    if (college.departmentName === '유아교육과' && flag) {
+    if (college.department_name === '유아교육과' && flag) {
       noticeLink = '/education/1553';
       flag = false;
     } else if (link !== undefined && link !== '#none' && flag) {
@@ -34,11 +35,11 @@ const findNoticeLink = (
 
 export const noticeCrawling = async (college: College): Promise<string> => {
   let protocol = 'https://';
-  if (college.departmentSubName === '의공학전공') {
+  if (college.department_subname === '의공학전공') {
     protocol = 'http://';
-  } else if (college.departmentSubName === '공간정보시스템공학전공')
-    return 'http://geoinfo.pknu.ac.kr/05piazza/08.php';
-  const response = await axios.get(college.departmentLink);
+  } else if (college.department_subname === '공간정보시스템공학전공')
+    return MAJOR_URL.spatial_information_system_engineering_notice;
+  const response = await axios.get(college.department_link);
   const hostLink = protocol + response.request._redirectable._options.hostname;
   const $ = cheerio.load(response.data);
   const noticeLink = hostLink + findNoticeLink('공지사항', college, $);
@@ -74,10 +75,8 @@ export const noticeListCrawling = async (
   const pinnedNotice: string[] = [];
   const normalNotice: string[] = [];
 
-  if (link === 'http://geoinfo.pknu.ac.kr/05piazza/08.php') {
-    const noticePage2Link =
-      'http://geoinfo.pknu.ac.kr/05piazza/08.php?p=2&key=&keyword=&bbscode=cate0501&reCategory=';
-    const noticePage2Lists = await noticeListCrawling(noticePage2Link, link);
+  if (link === MAJOR_URL.spatial_information_system_engineering_notice) {
+    const noticePage2Lists = await noticeListCrawling(link);
     pinnedNotice.push(...noticePage2Lists.pinnedNotice);
     normalNotice.push(...noticePage2Lists.normalNotice);
   }
@@ -94,19 +93,21 @@ export const noticeListCrawling = async (
       .text()
       .match(/\d{4}[-.]\d{2}[-.]\d{2}/);
 
-    if (link.startsWith('http://geoinfo.pknu.ac.kr/05piazza/08.php')) {
+    if (
+      link.startsWith(MAJOR_URL.spatial_information_system_engineering_notice)
+    ) {
       // 공간정보시스템공학과
       if ($(element).find('td').first().text().trim() === '공지')
         pinnedNotice.push(tmpLink);
       else normalNotice.push(tmpLink);
       flag = false;
-    } else if (link === 'http://bme.pknu.ac.kr/bbs/board.php?bo_table=notice') {
+    } else if (link === MAJOR_URL.biomedical_engineering_notice) {
       // 의공학과
       if ($(element).find('.notice_icon').length > 0)
         pinnedNotice.push(tmpLink);
       else normalNotice.push(tmpLink);
       flag = false;
-    } else if (link === 'https://visual.pknu.ac.kr/visual/3674') {
+    } else if (link === MAJOR_URL.visual_design_notice) {
       pinnedNotice.push(tmpLink);
     } else {
       const dateMatch = findDate[0];
@@ -140,20 +141,20 @@ export const noticeListCrawling = async (
   }
 };
 
-export const noticeContentCrawling = async (link: string): Promise<Notice> => {
+export const noticeContentCrawling = async (link: string): Promise<Notices> => {
   const response = await axios.get(link);
   const $ = cheerio.load(response.data);
 
   const contentData = $('div#board_view');
   if (contentData.length > 0) {
     const title = contentData.find('h3').first().text().trim();
-    const date = contentData.find('p.writer strong').text().trim();
+    const upload_date = contentData.find('p.writer strong').text().trim();
     const description = contentData
       .find('div.board_stance')
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
@@ -162,34 +163,40 @@ export const noticeContentCrawling = async (link: string): Promise<Notice> => {
     const title = contentData2.find('h2#bo_v_title').text().trim();
     const text = contentData2.find('strong.if_date').text().trim();
     const dateMatch = text.match(/(\d{2}-\d{2}-\d{2})/);
-    const date = dateMatch ? dateMatch[1] : null;
+    const upload_date = dateMatch ? dateMatch[1] : null;
     const description = contentData2
       .find('div#bo_v_con')
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
   const tables = $('table.a_brdList, table.c_brdView');
   if (tables.length > 0) {
     const title = tables.find('tr').eq(0).text().trim();
-    const date = tables.find('tr').eq(1).find('td').first().text().trim();
+    const upload_date = tables
+      .find('tr')
+      .eq(1)
+      .find('td')
+      .first()
+      .text()
+      .trim();
     const description = tables
       .find('tr')
       .eq(3)
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
   const writeTable = $('table.write');
   if (writeTable.length > 0) {
     const title = writeTable.find('tr').first().find('td').text().trim();
-    const date = writeTable
+    const upload_date = writeTable
       .find('tr')
       .eq(2)
       .find('td')
@@ -202,21 +209,21 @@ export const noticeContentCrawling = async (link: string): Promise<Notice> => {
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
   const boardBoxTable = $('div#board_box table');
   if (boardBoxTable.length > 0) {
     const title = boardBoxTable.find('tr p').first().text().trim();
-    const date = boardBoxTable.find('tr span').eq(1).text().trim();
+    const upload_date = boardBoxTable.find('tr span').eq(1).text().trim();
     const description = boardBoxTable
       .find('tr')
       .eq(2)
       .text()
       .trim()
       .replace(/\t|\n/g, '');
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, link, upload_date, description };
     return notice;
   }
 
@@ -229,7 +236,16 @@ export const noticeContentCrawling = async (link: string): Promise<Notice> => {
       .first()
       .text()
       .trim();
-    const date = bdContTable
+    const author = bdContTable
+      .find('tbody')
+      .first()
+      .find('tr')
+      .eq(1)
+      .find('td')
+      .eq(1)
+      .text()
+      .trim();
+    const upload_date = bdContTable
       .find('tbody')
       .first()
       .find('tr')
@@ -239,9 +255,18 @@ export const noticeContentCrawling = async (link: string): Promise<Notice> => {
       .text()
       .trim();
     const description = bdContTable.find('div.bdvTxt_wrap').text().trim();
-    const notice: Notice = { title, path: link, date, description };
+    const notice: Notices = { title, author, link, upload_date, description };
     return notice;
   }
 
-  return { title: '', path: '', date: '', description: '' };
+  const brdListTable = $('table.brdList').find('tbody').find('tr'); // 채용 공지사항 크롤링으로 upload_date는 모집기간을 가짐 (따로 타입을 만들어서 반환하기 싫기때문)
+  if (brdListTable.length > 0) {
+    const title = brdListTable.first().find('td').eq(1).text().trim();
+    const start_date = brdListTable.eq(2).find('td').eq(1).text().trim();
+    const end_date = brdListTable.eq(2).find('td').eq(3).text().trim();
+    const upload_date = start_date + ' ~ ' + end_date;
+    return { title, link, upload_date, description: '' };
+  }
+
+  return { title: '', link: '', upload_date: '', description: '' };
 };
