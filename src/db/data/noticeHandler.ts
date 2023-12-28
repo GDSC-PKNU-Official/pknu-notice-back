@@ -56,7 +56,7 @@ const saveMajorNotice = async (
     else await db.execute(saveNoticeQuery, values);
     console.log(`ID: ${departmentId} 공지사항 입력 성공`);
   } catch (error) {
-    notificationToSlack(error.message + '공지사항 입력 실패');
+    console.log(error.message + '공지사항 입력 실패');
   }
 };
 
@@ -169,7 +169,7 @@ const saveNotice = async (
     await db.execute(saveNoticeQuery, values);
     console.log('학교 공지사항 입력 성공');
   } catch (error) {
-    notificationToSlack(error.message + '학교 공지사항 입력 실패');
+    console.log(error.message + '학교 공지사항 입력 실패');
   }
 };
 
