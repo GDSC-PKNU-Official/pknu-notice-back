@@ -76,9 +76,14 @@ export const noticeListCrawling = async (
   const normalNotice: string[] = [];
 
   if (link === MAJOR_URL.spatial_information_system_engineering_notice) {
-    const noticePage2Lists = await noticeListCrawling(link);
-    pinnedNotice.push(...noticePage2Lists.pinnedNotice);
-    normalNotice.push(...noticePage2Lists.normalNotice);
+    for (const spatialLink of [
+      MAJOR_URL.spatial_information_system_engineering_notice2,
+      MAJOR_URL.spatial_information_system_engineering_notice3,
+    ]) {
+      const noticePage2Lists = await noticeListCrawling(spatialLink, link);
+      pinnedNotice.push(...noticePage2Lists.pinnedNotice);
+      normalNotice.push(...noticePage2Lists.normalNotice);
+    }
   }
 
   tableData.each((index, element) => {

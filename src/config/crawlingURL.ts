@@ -16,6 +16,10 @@ export const PKNU_URL = {
 export const MAJOR_URL = {
   spatial_information_system_engineering_notice:
     'http://geoinfo.pknu.ac.kr/05piazza/08.php',
+  spatial_information_system_engineering_notice2:
+    'http://geoinfo.pknu.ac.kr/05piazza/08.php?p=2&key=&keyword=&bbscode=cate0501&reCategory=',
+  spatial_information_system_engineering_notice3:
+    'http://geoinfo.pknu.ac.kr/05piazza/08.php?p=3&key=&keyword=&bbscode=cate0501&reCategory=',
   biomedical_engineering_notice:
     'http://bme.pknu.ac.kr/bbs/board.php?bo_table=notice',
   visual_design_notice: 'https://visual.pknu.ac.kr/visual/3674',
