@@ -43,7 +43,7 @@ const updateNotice = (notices: Notices[]) => {
 
 export const getNotices = async (department: string): Promise<SeparateNoti> => {
   const majorId = await getDepartmentIdByMajor(department);
-  const query = `SELECT * FROM major_notices WHERE department_id = ${majorId};`;
+  const query = `SELECT * FROM major_notices WHERE department_id = ${majorId} ORDER BY STR_TO_DATE(upload_date, '%Y-%m-%d') DESC;`;
   const major_notices = await selectQuery<Notices[]>(query);
 
   const notices: SeparateNoti = {
