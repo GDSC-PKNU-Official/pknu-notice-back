@@ -208,7 +208,7 @@ export const saveWhalebeToDB = async (): Promise<void> => {
   const whalebeDatas = await whalebeCrawling();
 
   // TODO: 웨일비 크롤링하는 데이터 추가해야함
-  const promises = whalebeDatas.map((data) => {
+  const promises = whalebeDatas.map(async (data) => {
     const values = [
       data.title,
       data.link,
@@ -217,7 +217,12 @@ export const saveWhalebeToDB = async (): Promise<void> => {
       data.imgurl,
     ];
 
-    return db.execute(query, values);
+    try {
+      const result = await db.execute(query, values);
+      return result;
+    } catch (error) {
+      console.log(error.message);
+    }
   });
 
   Promise.all(promises);
