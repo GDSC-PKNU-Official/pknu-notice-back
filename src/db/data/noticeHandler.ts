@@ -62,11 +62,13 @@ const saveMajorNotice = async (
 
 const convertAllNoticeToNormalNotice = async (
   tableName: string,
+  connection?: PoolConnection,
 ): Promise<void> => {
   const query = `UPDATE ${tableName} SET rep_yn = false;`;
 
   try {
-    await db.execute(query);
+    if (connection) await connection.execute(query);
+    else await db.execute(query);
     console.log('모든 공지를 일반 공지로 변경');
   } catch (error) {
     notificationToSlack(error.message + '\n모든 공지를 일반 공지로 변경 실패');
@@ -89,7 +91,7 @@ const convertSpecificNoticeToPinnedNotice = async (
 export const saveMajorNoticeToDB = async (
   connection?: PoolConnection,
 ): Promise<PushNoti> => {
-  await convertAllNoticeToNormalNotice('major_notices');
+  await convertAllNoticeToNormalNotice('major_notices', connection);
   const query = 'SELECT * FROM departments;';
   const colleges = await selectQuery<College[]>(query, connection);
 
