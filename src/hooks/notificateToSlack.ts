@@ -14,7 +14,8 @@ const notificationToSlack = async (text: string): Promise<void> => {
       text,
     });
   } catch (error) {
-    console.error(error);
+    console.error(error.message);
+    return notificationToSlack(text);
   }
   return;
 };

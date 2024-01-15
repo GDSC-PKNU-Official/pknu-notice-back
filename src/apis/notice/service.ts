@@ -9,8 +9,8 @@ import notificationToSlack from 'src/hooks/notificateToSlack';
 import { getDepartmentIdByMajor } from 'src/utils/majorUtils';
 
 interface SeparateNoti {
-  고정: ResponseNotice[] | Notices[];
-  일반: ResponseNotice[] | Notices[];
+  고정: ResponseNotice[] | Notices[] | RecruitData[];
+  일반: ResponseNotice[] | Notices[] | RecruitData[];
 }
 
 export interface ResponseNotice {
@@ -43,7 +43,7 @@ const updateNotice = (notices: Notices[]) => {
 
 export const getNotices = async (department: string): Promise<SeparateNoti> => {
   const majorId = await getDepartmentIdByMajor(department);
-  const query = `SELECT * FROM major_notices WHERE department_id = ${majorId};`;
+  const query = `SELECT * FROM major_notices WHERE department_id = ${majorId} ORDER BY STR_TO_DATE(upload_date, '%Y-%m-%d') DESC;`;
   const major_notices = await selectQuery<Notices[]>(query);
 
   const notices: SeparateNoti = {
@@ -98,7 +98,7 @@ export const getLanguage = async (): Promise<SeparateNoti> => {
   return notices;
 };
 
-export const getRecruit = async (): Promise<RecruitData[]> => {
+export const getRecruit = async (): Promise<SeparateNoti> => {
   const query = 'SELECT * FROM recruit_notices;';
   const recruitNotices = await selectQuery<RecruitData[]>(query);
   recruitNotices.sort(
@@ -106,6 +106,10 @@ export const getRecruit = async (): Promise<RecruitData[]> => {
       new Date(notice2.recruitment_period.split('~')[0]).getTime() -
       new Date(notice1.recruitment_period.split('~')[0]).getTime(),
   );
+  const notices: SeparateNoti = {
+    일반: recruitNotices,
+    고정: [],
+  };
 
-  return recruitNotices;
+  return notices;
 };

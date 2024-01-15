@@ -46,7 +46,6 @@ const handleDeployToServer = async () => {
   // 이 함수는 현재 배포되어있는 서버를 위해 사용되는 로직이며 최초 서버에 배포되는 1회만 실행되도록 하기위한 함수에요
   // 그렇기에 아래에 작성된 코드들은 배포서버에 배포되면 다음 배포전 수정해주세요!!
   // 전공 관련 크롤링
-  await saveMajorNoticeToDB();
 };
 
-handleDeployToServer();
+// handleDeployToServer();

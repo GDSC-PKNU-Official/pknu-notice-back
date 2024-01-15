@@ -84,4 +84,6 @@ export const pushNotification = async (
       }
     }
   }
+
+  return subscribeUsers.length;
 };
