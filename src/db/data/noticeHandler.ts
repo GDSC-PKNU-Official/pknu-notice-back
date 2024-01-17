@@ -27,7 +27,6 @@ export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
       await db.execute(saveCollegeQuery);
       console.log('단과대 입력 성공!');
     } catch (error) {
-      console.log(error.message, data);
       await notificationToSlack(`DB에 학과 삽입 실패`);
     }
   });
@@ -119,7 +118,7 @@ export const saveMajorNoticeToDB = async (
     for (const notice of normalNotices) {
       const result = await noticeContentCrawling(notice);
       if (result.link === '') {
-        notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+        // notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
         continue;
       }
 
