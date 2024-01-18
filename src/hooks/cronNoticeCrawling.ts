@@ -53,7 +53,7 @@ const cronExtracurricularCrawling = async () => {
   }
 };
 
-cron.schedule('0 0-9 * * 1-5', async () => {
+cron.schedule('0 0-9/2 * * 1-5', async () => {
   cronNoticeCrawling();
 });
 

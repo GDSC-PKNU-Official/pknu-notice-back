@@ -13,7 +13,7 @@ export const getDepartmentIdByMajor = async (major: string) => {
     );
 
     if (!departmentId.length) {
-      notificationToSlack('잘못된 학과 입력');
+      notificationToSlack(major + '잘못된 학과 입력');
       return;
     }
     return departmentId[0].id;
