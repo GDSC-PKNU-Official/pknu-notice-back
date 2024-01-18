@@ -83,7 +83,8 @@ const convertSpecificNoticeToPinnedNotice = async (
   try {
     await db.execute(query);
   } catch (error) {
-    notificationToSlack(error.message + '\n 고정 공지로 변경 실패');
+    console.log(error.message + '고정 공지로 변경 실패');
+    // notificationToSlack(error.message + '\n 고정 공지로 변경 실패');
   }
 };
 
