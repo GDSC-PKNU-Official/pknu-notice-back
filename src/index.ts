@@ -1,10 +1,10 @@
+import buildingInfoRouter from '@apis/building-info/controllers';
 import graduationRouter from '@apis/graduation/controller';
 import majorRouter from '@apis/majorDecision/controller';
 import noticeRouter from '@apis/notice/controller';
 import subscriptionRouter from '@apis/subscribe/controller';
 import suggestionRouter from '@apis/suggestion/controller';
 import env from '@config';
-import { saveMajorNoticeToDB } from '@db/data/noticeHandler';
 import { corsOptions } from '@middlewares/cors';
 import errorHandler from '@middlewares/error-handler';
 import cors from 'cors';
@@ -30,6 +30,7 @@ app.use('/api/majorDecision', majorRouter);
 app.use('/api/announcement', noticeRouter);
 app.use('/api/graduation', graduationRouter);
 app.use('/api/subscription', subscriptionRouter);
+app.use('/api/buildingInfo', buildingInfoRouter);
 
 app.get('/test', (req: Request, res: Response) => {
   console.log('test');
