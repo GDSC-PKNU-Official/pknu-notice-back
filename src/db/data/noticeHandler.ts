@@ -184,6 +184,11 @@ export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
   });
 
   await Promise.all(savePromises);
+  if (failedMajor.length !== 0) {
+    const failedMajorList = failedMajor.join();
+    notificationToSlack('크롤링 실패한 학과: ' + failedMajorList);
+  }
+
   return newNoticeMajor;
 };
 
