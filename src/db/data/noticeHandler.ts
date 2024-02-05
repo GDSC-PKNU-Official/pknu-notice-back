@@ -104,11 +104,16 @@ export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
     const connection = await db.getConnection();
     await connection.beginTransaction();
     try {
-      console.log(college.id);
       const noticeLink = await noticeCrawling(college);
       const noticeLists = await noticeListCrawling(noticeLink);
-      const normalNotices = noticeLists.normalNotice;
       const pinnedNotices = noticeLists.pinnedNotice;
+      const normalNotices = noticeLists.normalNotice;
+      if (normalNotices.length === 0) {
+        notificationToSlack(`${noticeLink} 크롤링 실패`);
+        connection.release();
+        return;
+      }
+
       const getNotiLinkQuery = `SELECT link, rep_yn FROM major_notices WHERE department_id = '${college.id}'`;
       const noticeDataInDB = await selectQuery<NotiLink[]>(
         getNotiLinkQuery,
@@ -116,14 +121,8 @@ export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
       );
       const noticeLinksInDB = noticeDataInDB.map((noti) => noti.link);
       const pinnedNoticeLinksInDB = noticeDataInDB
-        .filter((noti) => noti.rep_yn === true)
+        .filter((noti) => noti.rep_yn)
         .map((noti) => noti.link);
-
-      if (normalNotices.length === 0) {
-        notificationToSlack(`${noticeLink} 크롤링 실패`);
-        connection.release();
-        return;
-      }
 
       for (const notice of normalNotices) {
         const result = await noticeContentCrawling(notice);
