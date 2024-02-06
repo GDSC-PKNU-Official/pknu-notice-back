@@ -21,34 +21,34 @@ const pushToUsers = async (pushNotiToUserLists: PushNoti) => {
   if (pushedUserCount.length !== 0) notificationToSlack(pushedUserCount);
 };
 
-const cronNoticeCrawling = async () => {
-  const connection = await db.getConnection();
-  await connection.beginTransaction();
+const cronNoticeCrawling = async (reTryCount = 0) => {
   try {
-    const pushNotiToUserLists = await saveMajorNoticeToDB(connection);
+    const pushNotiToUserLists = await saveMajorNoticeToDB();
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1; // 월은 0부터 시작하므로 1을 더해줍니다.
     const day = today.getDate();
     notificationToSlack(`${year}-${month}-${day} 크롤링 완료`);
-    await connection.commit();
     pushToUsers(pushNotiToUserLists);
   } catch (error) {
-    await connection.rollback();
-    notificationToSlack(error.message);
-    cronNoticeCrawling();
-  } finally {
-    connection.release();
+    if (reTryCount >= 2) {
+      notificationToSlack(error.message);
+      return;
+    }
+    cronNoticeCrawling(reTryCount + 1);
   }
 };
 
-const cronExtracurricularCrawling = async () => {
+const cronExtracurricularCrawling = async (reTryCount = 0) => {
   try {
     await saveSchoolNoticeToDB();
     await saveLanguageNoticeToDB();
     await saveWhalebeToDB();
   } catch (error) {
-    notificationToSlack(error.message);
+    if (reTryCount >= 2) {
+      notificationToSlack(error.message);
+      return;
+    }
     cronExtracurricularCrawling();
   }
 };

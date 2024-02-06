@@ -17,6 +17,7 @@ export interface PushNoti {
 
 interface NotiLink {
   link: string;
+  rep_yn: boolean;
 }
 
 export const saveDepartmentToDB = async (college: College[]): Promise<void> => {
@@ -74,81 +75,119 @@ const convertAllNoticeToNormalNotice = async (
   }
 };
 
-const convertSpecificNoticeToPinnedNotice = async (
+const convertSpecificNoticePinned = async (
   tableName: string,
   noticeLink: string,
+  isPinned: boolean,
+  connection?: PoolConnection,
 ): Promise<void> => {
-  const query = `UPDATE ${tableName} SET rep_yn = true WHERE link = '${noticeLink}';`;
+  const query = `UPDATE ${tableName} SET rep_yn = ${isPinned} WHERE link = '${noticeLink}';`;
 
   try {
-    await db.execute(query);
+    if (connection) await connection.execute(query);
+    else await db.execute(query);
   } catch (error) {
     console.log(error.message + '고정 공지로 변경 실패');
     // notificationToSlack(error.message + '\n 고정 공지로 변경 실패');
   }
 };
 
-export const saveMajorNoticeToDB = async (
-  connection?: PoolConnection,
-): Promise<PushNoti> => {
-  await convertAllNoticeToNormalNotice('major_notices', connection);
+export const saveMajorNoticeToDB = async (): Promise<PushNoti> => {
+  // await convertAllNoticeToNormalNotice('major_notices', connection);
   const query = 'SELECT * FROM departments;';
-  const colleges = await selectQuery<College[]>(query, connection);
+  const colleges = await selectQuery<College[]>(query);
 
-  const getNotiLinkQuery = `SELECT link FROM major_notices;`;
-  const noticeLinksInDB = (
-    await selectQuery<NotiLink[]>(getNotiLinkQuery, connection)
-  ).map((noticeLink) => noticeLink.link);
-
-  const savePromises: Promise<void>[] = [];
   const newNoticeMajor: PushNoti = {};
+  const failedMajor: number[] = [];
 
-  for (const college of colleges) {
-    console.log(college.id);
-    const noticeLink = await noticeCrawling(college);
-    const noticeLists = await noticeListCrawling(noticeLink);
-
-    const normalNotices = noticeLists.normalNotice;
-    const pinnedNotices = noticeLists.pinnedNotice;
-
-    if (normalNotices.length === 0) {
-      notificationToSlack(`${noticeLink} 크롤링 실패`);
-      continue;
-    }
-
-    for (const notice of normalNotices) {
-      const result = await noticeContentCrawling(notice);
-      if (result.link === '') {
-        // notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
-        continue;
+  const savePromises = colleges.map(async (college) => {
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
+    try {
+      const noticeLink = await noticeCrawling(college);
+      const noticeLists = await noticeListCrawling(noticeLink);
+      const pinnedNotices = noticeLists.pinnedNotice;
+      const normalNotices = noticeLists.normalNotice;
+      if (normalNotices.length === 0) {
+        notificationToSlack(`${noticeLink} 크롤링 실패`);
+        connection.release();
+        return;
       }
 
-      if (noticeLinksInDB.includes(result.link)) continue;
-      if (!newNoticeMajor[college.id]) newNoticeMajor[college.id] = [];
-      newNoticeMajor[college.id].push(result.title);
-      savePromises.push(saveMajorNotice(result, college.id, false, connection));
-    }
+      const getNotiLinkQuery = `SELECT link, rep_yn FROM major_notices WHERE department_id = '${college.id}'`;
+      const noticeDataInDB = await selectQuery<NotiLink[]>(
+        getNotiLinkQuery,
+        connection,
+      );
+      const noticeLinksInDB = noticeDataInDB.map((noti) => noti.link);
+      const pinnedNoticeLinksInDB = noticeDataInDB
+        .filter((noti) => noti.rep_yn)
+        .map((noti) => noti.link);
 
-    if (pinnedNotices) {
-      for (const notice of pinnedNotices) {
+      for (const notice of normalNotices) {
         const result = await noticeContentCrawling(notice);
         if (result.link === '') {
-          notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+          // notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
           continue;
         }
 
-        if (!noticeLinksInDB.includes(result.link)) {
-          savePromises.push(
-            saveMajorNotice(result, college.id, true, connection),
-          );
-          continue;
-        }
-        convertSpecificNoticeToPinnedNotice('major_notices', result.link);
+        if (noticeLinksInDB.includes(result.link)) return;
+        if (!newNoticeMajor[college.id]) newNoticeMajor[college.id] = [];
+        newNoticeMajor[college.id].push(result.title);
+        saveMajorNotice(result, college.id, false, connection);
+        noticeLinksInDB.push(result.link);
       }
+
+      if (pinnedNotices) {
+        await pinnedNoticeLinksInDB
+          .filter((noti) => !pinnedNotices.includes(noti))
+          .map(
+            async (noti) =>
+              await convertSpecificNoticePinned(
+                'major_notices',
+                noti,
+                false,
+                connection,
+              ),
+          );
+        for (const notice of pinnedNotices) {
+          const result = await noticeContentCrawling(notice);
+          if (result.link === '') {
+            notificationToSlack(`${notice} 콘텐츠 크롤링 실패`);
+            continue;
+          }
+
+          if (!noticeLinksInDB.includes(result.link)) {
+            saveMajorNotice(result, college.id, true, connection);
+            continue;
+          }
+
+          if (!pinnedNoticeLinksInDB.includes(result.link))
+            convertSpecificNoticePinned(
+              'major_notices',
+              result.link,
+              true,
+              connection,
+            );
+        }
+      }
+
+      connection.commit();
+    } catch (error) {
+      notificationToSlack(college.id + '크롤링 실패' + error.message);
+      failedMajor.push(college.id);
+      connection.rollback();
+    } finally {
+      connection.release();
     }
-  }
+  });
 
   await Promise.all(savePromises);
+  if (failedMajor.length !== 0) {
+    const failedMajorList = failedMajor.join();
+    notificationToSlack('크롤링 실패한 학과: ' + failedMajorList);
+  }
+
   return newNoticeMajor;
 };
 
@@ -188,7 +227,7 @@ export const saveSchoolNoticeToDB = async (): Promise<void> => {
 
   for (const noticeLink of pinnedNotices) {
     if (schoolNoticeLinksInDB.includes(noticeLink)) {
-      await convertSpecificNoticeToPinnedNotice('notices', noticeLink);
+      await convertSpecificNoticePinned('notices', noticeLink, true);
       continue;
     }
 
