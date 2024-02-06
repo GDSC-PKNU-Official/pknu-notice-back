@@ -2,10 +2,7 @@ import { selectQuery } from '@db/query/dbQueryHandler';
 import notificationToSlack from 'src/hooks/notificateToSlack';
 
 export const getDepartmentIdByMajor = async (major: string) => {
-  const [departmentName, departmentSubName] = major.split(' ');
-  const getDepartmentQuery = `SELECT id FROM departments WHERE department_name = '${departmentName}' ${
-    departmentSubName ? `AND department_subname = '${departmentSubName}'` : ''
-  };`;
+  const getDepartmentQuery = `SELECT id FROM departments WHERE department_name = '${major}' OR department_subname = '${major}'`;
 
   try {
     const departmentId = await selectQuery<{ id: number }[]>(
